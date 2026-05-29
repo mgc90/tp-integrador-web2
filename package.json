@@ -18,8 +18,9 @@
   "homepage": "https://github.com/mgc90/tp-integrador-web2#readme",
   "dependencies": {
     "express": "^5.2.1",
-    "mysql2": "^3.22.3",
     "nodemon": "^3.1.14",
+    "pg": "^8.21.0",
+    "pg-hstore": "^2.3.4",
     "pug": "^3.0.4",
     "sequelize": "^6.37.8"
   }
