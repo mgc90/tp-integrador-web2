@@ -1,4 +1,4 @@
-'use strict';
+/* 'use strict';
 
 const fs = require('fs');
 const path = require('path');
@@ -40,4 +40,21 @@ Object.keys(db).forEach(modelName => {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
-module.exports = db;
+module.exports = db; */
+
+import sequelize from "./config.js";
+
+
+export async function connectDatabase() {
+  try {
+    /* initializeAssociations(); */
+    await sequelize.authenticate(); // testear la conexion
+    console.log('[+] Conexion a bd establecida')
+    
+    await sequelize.sync({ alter: true });
+    console.log('[+] Sincronizado de modelos')
+  } catch (error) {
+    console.error('[+] Error en la conexion a la bd', error)
+    throw error
+  }
+}

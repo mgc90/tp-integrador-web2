@@ -4,8 +4,11 @@
   "description": "Trabajo Práctico Integrador para la materia Programación Web 2 de la Tecnicatura en Desarrollo de Software",
   "main": "app.js",
   "scripts": {
-    "test": "start"
+    "test": "start",
+    "start": "node app.js",
+    "tailwind": "tailwindcss -i ./public/styles/input.css -o ./public/styles/output.css --watch"
   },
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mgc90/tp-integrador-web2.git"
@@ -17,11 +20,16 @@
   },
   "homepage": "https://github.com/mgc90/tp-integrador-web2#readme",
   "dependencies": {
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "nodemon": "^3.1.14",
     "pg": "^8.21.0",
     "pg-hstore": "^2.3.4",
     "pug": "^3.0.4",
     "sequelize": "^6.37.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.0",
+    "tailwindcss": "^4.3.0"
   }
 }
