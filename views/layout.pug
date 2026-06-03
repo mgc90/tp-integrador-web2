@@ -1,5 +1,4 @@
-include mixins/alert
-include mixins/nav
+
 
 doctype html
 html
@@ -9,10 +8,14 @@ html
     link(rel="stylesheet", href="/styles/output.css")
     block metadata
 
-  body
-    +nav
+  body(class="bg-black shadow-[0_0_40px_10px_rgba(255,255,255,0.8)]")
+    
     main
-      +alert(alert)
+    
 
-      div(style="padding: 20px")
+      div(class="m-10 justify-self-center items-center")
+
+        h1(class="text-red-600 text-6xl justify-self-center") Fotaza
+        p(class="text-white ") La mejor app para compartir tus imágenes.
+
         block content

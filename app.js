@@ -3,6 +3,7 @@ import { connectDatabase } from './models/index.js';
 import express from 'express';
 var app = express();
 
+const PORT = process.env.PORT;
 
 
 
@@ -23,12 +24,12 @@ connectDatabase()
   .then(() => {
     app.listen(PORT, (err) => {
       if(err) {
-        console.error('[+] Error al iniciar el servidor:', err);
+        console.error('Error al iniciar el servidor:', err);
         return;
       }
-      console.log(`[+] Servidor escuchando en el puerto ${PORT}`);
+      console.log(`Servidor activo en el puerto ${PORT}`);
     });
   })
   .catch((err) => {
-    console.error('[+] Error sincronizando con bd:', err)
+    console.error('Error sincronizando con bd:', err)
   })
