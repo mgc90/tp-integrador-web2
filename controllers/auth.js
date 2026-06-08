@@ -65,7 +65,7 @@ export async function login(req, res) {
   }
 
   // si esta todo ok => luego de redirecciona al home
-  res.redirect('/expense')
+  res.redirect('/')
 }
 
 export async function signupForm(req, res) {
@@ -79,7 +79,7 @@ export async function signup(req, res) {
   const lastname = apellido.trim();
   const mail = email.trim();
   const pass = password.trim();
-  const confirmPass = password.trim();
+  const confirmPass = confirmPassword.trim();
 
   if(!name || !lastname || !mail || !pass || !confirmPass){
     res.status(400).render('auth/signup', {
@@ -121,7 +121,7 @@ export async function signup(req, res) {
   }
 
   // si esta todo ok => luego de redirecciona al home
-  res.redirect('/expense')
+  res.redirect('/')
 }
 
 export async function logout(req, res) {

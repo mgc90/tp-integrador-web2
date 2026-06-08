@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { login, loginForm, logout, signup, signupForm } from "../controller/auth.js"
+import { login, loginForm, logout, signup, signupForm } from "../controllers/auth.js"
 
 const auth = Router()
 auth.get('/login', loginForm)
