@@ -1,0 +1,47 @@
+extends ../layout.pug
+include ../mixins/commentCard
+
+
+
+block metadata
+  title= post.title + ' - Fotaza'
+
+block content
+  div(class="max-w-4xl mx-auto")
+    h2(class="text-white text-3xl font-semibold mb-2")= post.title
+    p(class="text-zinc-400 mb-1")= post.User? post.User.firstName + " " + post.User.lastName : ''
+    if post.description
+      p(class="text-zinc-300 mb-6")= post.description
+
+    if !post.commentsEnabled
+      div(class="bg-yellow-900/50 border border-yellow-700 text-yellow-300 rounded-lg p-3 mb-6 text-sm")
+        | El autor cerró los comentarios para esta publicación.
+
+    div(class="space-y-8")
+      each image in post.images
+        div(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700")
+          img(src=image.url, alt=post.title,
+              class="w-full aspect-square object-cover")
+          div(class="p-4")
+            div(class="flex items-center gap-2 mb-3")
+              span(class="text-xs text-zinc-500 bg-zinc-700 px-2 py-1 rounded")
+                if image.license === 'copyright'
+                  | Con Copyright
+                else
+                  | Sin Copyright
+
+            h4(class="text-zinc-400 text-sm font-medium mb-3") Comentarios
+
+            if image.comments && image.comments.length
+              div(class="space-y-2 mb-4")
+                each comment in image.comments
+                  +commentCard(comment)
+            else
+              p(class="text-zinc-500 text-sm mb-4") Sin comentarios aún.
+
+            if currentUser && post.commentsEnabled
+              form(method='POST', action='/posts/' + post.id + '/images/' + image.id + '/comments', class="flex gap-2")
+                input(type='text', name='content', required, placeholder='Escribí un comentario...',
+                  class="flex-1 px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-500")
+                button(type='submit',
+                  class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm cursor-pointer transition-colors") Comentar

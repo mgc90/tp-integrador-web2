@@ -1,0 +1,6 @@
+mixin commentCard(comment)
+  div(class="bg-zinc-700/50 rounded-lg p-3")
+    div(class="flex items-center gap-2 text-zinc-400 text-xs mb-1")
+      span(class="font-medium text-zinc-300") post.User ? comment.User.firstName + " " + comment.User.lastName : ''
+      span comment.createdAt?.toLocaleDateString()
+    p(class="text-zinc-200 text-sm") comment.content

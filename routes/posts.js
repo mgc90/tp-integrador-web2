@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
-import { createForm, create } from '../controllers/posts.js';
+import { createForm, create, detail, addComment } from '../controllers/posts.js';
 import { authMiddleware } from '../middlewares/auth.js';
 
 const storage = multer.diskStorage({
@@ -35,5 +35,8 @@ posts.post('/new',
   ]),
   create
 );
+
+posts.get('/:postId', detail);
+posts.post('/:postId/images/:imageId/comments', authMiddleware, addComment);
 
 export default posts;

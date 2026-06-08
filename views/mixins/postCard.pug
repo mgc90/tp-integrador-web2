@@ -1,13 +1,14 @@
 mixin postCard(post, showUser = true)
-  article(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700")
-    if post.images[0]
-      img(src=post.images[0].url
-      alt=post.title
-      class="w-full aspect-square object-cover")
-    div(class="p-4")
-      h3(class="text-white font-semibold truncate")= post.title
-      p(class="text-zinc-400 text-sm mt-1 line-clamp-2")= post.description
-      if showUser
-        div(class="flex items-center justify-between mt-3 text-zinc-500 text-xs")
-          span= ((post.user && post.user.firstName || '') + ' ' + (post.user && post.user.lastName || '')).trim()
-          span= post.createdAt ? post.createdAt.toLocaleDateString() : ''
+  a(href='/posts/' + post.id, class="block")
+    article(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700")
+      if post.images[0]
+        img(src=post.images[0].url
+        alt=post.title
+        class="w-full aspect-square object-cover")
+      div(class="p-4")
+        h3(class="text-white font-semibold truncate")= post.title
+        p(class="text-zinc-400 text-sm mt-1 line-clamp-2")= post.description
+        if showUser
+          div(class="flex items-center justify-between mt-3 text-zinc-500 text-xs")
+            span= ((post.user && post.user.firstName || '') + ' ' + (post.user && post.user.lastName || '')).trim()
+            span= post.createdAt ? post.createdAt.toLocaleDateString() : ''

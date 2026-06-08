@@ -1,6 +1,72 @@
 import { Post } from "../models/Post.js";
 import { Image } from "../models/Image.js";
 import { Tag } from "../models/Tag.js";
+import { Comment } from "../models/Comment.js";
+import { User } from "../models/User.js";
+
+export async function detail(req, res) {
+  try {
+    const post = await Post.findByPk(req.params.postId, {
+      include: [
+        { model: User, attributes: ['id', 'firstName', 'lastName'] },
+        { model: Image, as: 'images',
+          include: [
+            { model: Comment,
+              include: [{ model: User, attributes: ['id', 'firstName', 'lastName'] }],
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!post) {
+      return res.status(404).render('index', {
+        alert: { status: 'error', text: 'Publicación no encontrada' }
+      });
+    }
+
+    res.render('posts/detail', { post });
+  } catch (error) {
+    console.error('[!] Error al cargar detalle:', error);
+    res.status(500).render('index', {
+      alert: { status: 'error', text: 'Error al cargar la publicación' }
+    });
+  }
+}
+
+export async function addComment(req, res) {
+  const { postId, imageId } = req.params;
+
+  try {
+    const post = await Post.findByPk(postId, {
+      attributes: ['id', 'commentsEnabled']
+    });
+
+    if (!post) {
+      return res.status(404).redirect('/');
+    }
+
+    if (!post.commentsEnabled) {
+      return res.redirect('/posts/' + postId);
+    }
+
+    const content = req.body.content && req.body.content.trim();
+    if (!content) {
+      return res.redirect('/posts/' + postId);
+    }
+
+    await Comment.create({
+      imageId: Number(imageId),
+      userId: req.session.user.id,
+      content,
+    });
+
+    res.redirect('/posts/' + postId);
+  } catch (error) {
+    console.error('[!] Error al comentar:', error);
+    res.redirect('/posts/' + postId);
+  }
+}
 
 export async function createForm(req, res) {
   res.render('posts/new');
