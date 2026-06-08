@@ -1,21 +1,25 @@
 mixin item(path, name, active)
   li
     if active
-      a(href=path class='active') #{name}
-    else 
-      a(href=path) #{name}
+      a(href=path class='text-red-600 font-medium transition-colors') #{name}
+    else
+      a(href=path class='text-zinc-300 hover:text-red-400 transition-colors') #{name}
 
 mixin nav
-  nav
-    ul
-      +item('/', 'Home', currentPath == '/')
-      if currentUser
-        +item('/expense', 'Gastos', currentPath.startsWith('/expense'))
-        +item('/tag', 'Categorías', currentPath.startsWith('/tag'))
-        li.nav-user
-          form(action="/auth/logout", method="post")
-            button(type="submit") Salir
-        li.nav-user
-          div.nav-user-profile
-            span #{currentUser.firstName} #{currentUser.lastName}
-            img(src='/icons/user-svgrepo-com.svg', alt='Usuario', width='22', height='22')
+  nav(class="bg-zinc-900 border-b border-zinc-700 px-6 py-3")
+    div(class="flex items-center justify-between")
+      ul(class="flex items-center gap-6 text-red-600 text-4xl")
+        +item('/', 'Fotaza', currentPath == '/')
+      include ../partials/searchBar
+      div(class="flex items-center gap-6")
+        if currentUser
+          +item('/posts/new', 'Nueva publicación', currentPath == '/posts/new')
+          +item('/following', 'Siguiendo', currentPath == '/following')
+          +item('/profile', 'Mi perfil', currentPath == '/profile')
+          //img(src='/icons/user-svgrepo-com.svg', alt='Usuario', width='22', height='22')
+          form(action="/auth/logout", method="post")   
+            button(type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors") Salir
+          
+        else
+          +item('/auth/login', 'Iniciar sesión', currentPath == '/auth/login')
+          +item('/auth/signup', 'Registrarse', currentPath == '/auth/signup')

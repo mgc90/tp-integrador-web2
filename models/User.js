@@ -32,12 +32,6 @@ User.init(
         isEmail: 'Debe ser un email!'
       }
     },
-    phone: {
-      type: DataTypes.STRING,
-    },
-    birthDate: {
-      type: DataTypes.DATEONLY,
-    },
     avatar: {
       type: DataTypes.STRING,
     },
@@ -67,9 +61,7 @@ User.init(
 // id not null autoincremental
 // firstname not null varchar(50)
 // lastname not null varchar(50)
-// birthDate Date
 // email not null varchar
-// phone varchar
 // -- auditoria
 // createdAt
 // deletedAt => null | Date para si está activo o no. si es null usuario

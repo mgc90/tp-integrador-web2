@@ -1,5 +1,7 @@
+import 'dotenv/config';
 import { connectDatabase } from './models/index.js';
 import authRouter from './routes/auth.js';
+import { loadCurrentUser } from './middlewares/auth.js';
 import session from 'express-session';
 
 import express from 'express';
@@ -26,6 +28,9 @@ app.use(session({
 // MOTOR DE PLANTILLAS
 app.set('view engine', 'pug');
 app.set('views', './views');
+
+// MIDDLEWARE GLOBAL - carga currentUser desde la sesion
+app.use(loadCurrentUser);
 
 // RUTAS
 app.get('/', (req, res) => {
