@@ -89,6 +89,7 @@ export async function signup(req, res) {
       },
       formValues: req.body
     })
+    return;
   }
 
   if(pass !== confirmPass){
@@ -99,6 +100,7 @@ export async function signup(req, res) {
       },
       formValues: req.body
     })
+    return;
   }
 
   try {

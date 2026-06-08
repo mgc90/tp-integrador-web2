@@ -6,7 +6,7 @@
   "scripts": {
     "test": "start",
     "start": "node app.js",
-    "dev": "concurrently \"nodemon index.js\" \"npx tailwindcss -i ./public/styles/input.css -o ./public/styles/output.css --watch\" \"browser-sync start --proxy localhost:4000 --files \\\"views/**/*.pug,public/**/*.css\\\" --no-open\"",
+    "dev": "concurrently \"nodemon app.js\" \"npx tailwindcss -i ./public/styles/input.css -o ./public/styles/output.css --watch\" \"browser-sync start --proxy localhost:4000 --files \\\"views/**/*.pug,public/**/*.css\\\" --no-open\"",
     "tailwind": "tailwindcss -i ./public/styles/input.css -o ./public/styles/output.css --watch"
   },
   "type": "module",
@@ -21,9 +21,11 @@
   },
   "homepage": "https://github.com/mgc90/tp-integrador-web2#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "browser-sync": "^3.0.4",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-session": "^1.19.0",
     "nodemon": "^3.1.14",
     "pg": "^8.21.0",
     "pg-hstore": "^2.3.4",

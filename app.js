@@ -1,5 +1,6 @@
 import { connectDatabase } from './models/index.js';
 import authRouter from './routes/auth.js';
+import session from 'express-session';
 
 import express from 'express';
 var app = express();
@@ -11,6 +12,15 @@ const PORT = process.env.PORT;
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+
+// SESION
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'secret_dev',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 1000 * 60 * 60 * 24 }
+}));
 
 
 // MOTOR DE PLANTILLAS
