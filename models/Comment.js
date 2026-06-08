@@ -1,9 +1,9 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "./config.js";
 
-export class Valoration extends Model {}
+export class Comment extends Model {}
 
-Valoration.init(
+Comment.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -20,20 +20,16 @@ Valoration.init(
       allowNull: false,
       references: { model: 'users', key: 'id' },
     },
-    value: {
-      type: DataTypes.INTEGER,
+    content: {
+      type: DataTypes.TEXT,
       allowNull: false,
-      validate: { min: 1, max: 5 },
     },
   },
   {
     sequelize,
-    modelName: 'Valoration',
-    tableName: 'valorations',
+    modelName: 'Comment',
+    tableName: 'comments',
     createdAt: true,
     deletedAt: true,
-    indexes: [
-      { unique: true, fields: ['imageId', 'userId'] },
-    ],
   },
 );

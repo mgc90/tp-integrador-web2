@@ -39,7 +39,7 @@ User.init(
       type: DataTypes.DATEONLY,
     },
     avatar: {
-      type: DataTypes.BLOB,
+      type: DataTypes.STRING,
     },
     password: {
       type: DataTypes.STRING,

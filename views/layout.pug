@@ -1,3 +1,5 @@
+include mixins/alert
+include mixins/nav
 
 
 doctype html
@@ -9,9 +11,9 @@ html
     block metadata
 
   body(class="bg-black shadow-[0_0_40px_10px_rgba(255,255,255,0.8)]")
-    
+    +nav
     main
-    
+      +alert(alert)
 
       div(class="m-10 justify-self-center items-center")
 
@@ -19,3 +21,6 @@ html
         p(class="text-white ") La mejor app para compartir tus imágenes.
 
         block content
+
+  footer 
+    p Fotaza 2026 todos los derechos reservados.

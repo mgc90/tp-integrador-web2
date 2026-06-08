@@ -1,0 +1,21 @@
+mixin item(path, name, active)
+  li
+    if active
+      a(href=path class='active') #{name}
+    else 
+      a(href=path) #{name}
+
+mixin nav
+  nav
+    ul
+      +item('/', 'Home', currentPath == '/')
+      if currentUser
+        +item('/expense', 'Gastos', currentPath.startsWith('/expense'))
+        +item('/tag', 'Categorías', currentPath.startsWith('/tag'))
+        li.nav-user
+          form(action="/auth/logout", method="post")
+            button(type="submit") Salir
+        li.nav-user
+          div.nav-user-profile
+            span #{currentUser.firstName} #{currentUser.lastName}
+            img(src='/icons/user-svgrepo-com.svg', alt='Usuario', width='22', height='22')

@@ -1,56 +1,57 @@
-/* 'use strict';
-
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const process = require('process');
-const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.json')[env];
-const db = {};
-
-let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
-
-fs
-  .readdirSync(__dirname)
-  .filter(file => {
-    return (
-      file.indexOf('.') !== 0 &&
-      file !== basename &&
-      file.slice(-3) === '.js' &&
-      file.indexOf('.test.js') === -1
-    );
-  })
-  .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-    db[model.name] = model;
-  });
-
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
-
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
-
-module.exports = db; */
-
 import sequelize from "./config.js";
+import { User } from './User.js';
+import { Post } from './Post.js';
+import { Image } from './Image.js';
+import { Tag } from './Tag.js';
+import { Comment } from './Comment.js';
+import { Valoration } from './Valoration.js';
+import { Interest } from './Interest.js';
+import { Follow } from './Follow.js';
 
+function initializeAssociations() {
+  User.hasMany(Post, { foreignKey: 'userId' });
+  Post.belongsTo(User, { foreignKey: 'userId' });
+
+  Post.hasMany(Image, { foreignKey: 'postId' });
+  Image.belongsTo(Post, { foreignKey: 'postId' });
+
+  Post.belongsToMany(Tag, { through: 'PostTag', foreignKey: 'postId' });
+  Tag.belongsToMany(Post, { through: 'PostTag', foreignKey: 'tagId' });
+
+  Image.hasMany(Comment, { foreignKey: 'imageId' });
+  Comment.belongsTo(Image, { foreignKey: 'imageId' });
+  User.hasMany(Comment, { foreignKey: 'userId' });
+  Comment.belongsTo(User, { foreignKey: 'userId' });
+
+  Image.hasMany(Valoration, { foreignKey: 'imageId' });
+  Valoration.belongsTo(Image, { foreignKey: 'imageId' });
+  User.hasMany(Valoration, { foreignKey: 'userId' });
+  Valoration.belongsTo(User, { foreignKey: 'userId' });
+
+  Image.hasMany(Interest, { foreignKey: 'imageId' });
+  Interest.belongsTo(Image, { foreignKey: 'imageId' });
+  User.hasMany(Interest, { foreignKey: 'userId' });
+  Interest.belongsTo(User, { foreignKey: 'userId' });
+
+  User.belongsToMany(User, {
+    as: 'Followers',
+    through: Follow,
+    foreignKey: 'followedId',
+    otherKey: 'followerId',
+  });
+  User.belongsToMany(User, {
+    as: 'Following',
+    through: Follow,
+    foreignKey: 'followerId',
+    otherKey: 'followedId',
+  });
+}
 
 export async function connectDatabase() {
   try {
-    /* initializeAssociations(); */
-    await sequelize.authenticate(); // testear la conexion
+    initializeAssociations();
+    await sequelize.authenticate();
     console.log('[+] Conexion a bd establecida')
-    
     await sequelize.sync({ alter: true });
     console.log('[+] Sincronizado de modelos')
   } catch (error) {
