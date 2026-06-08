@@ -1,6 +1,10 @@
 import 'dotenv/config';
 import { connectDatabase } from './models/index.js';
+import { Post } from './models/Post.js';
+import { Image } from './models/Image.js';
+import { User } from './models/User.js';
 import authRouter from './routes/auth.js';
+import postsRouter from './routes/posts.js';
 import { loadCurrentUser } from './middlewares/auth.js';
 import session from 'express-session';
 
@@ -33,12 +37,25 @@ app.set('views', './views');
 app.use(loadCurrentUser);
 
 // RUTAS
-app.get('/', (req, res) => {
-  res.render('index');
+app.get('/', async (req, res) => {
+  try {
+    const posts = await Post.findAll({
+      include: [
+        { model: Image, as: 'images', attributes: ['id', 'url', 'license'] },
+        { model: User, attributes: ['id', 'firstName', 'lastName'] },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+    res.render('index', { posts });
+  } catch (error) {
+    console.error('[!] Error al cargar posts:', error);
+    res.render('index', { posts: [] });
+  }
 })
 
 
 app.use('/auth', authRouter);
+app.use('/posts', postsRouter);
 
 
 // CONEXION A BD

@@ -35,6 +35,9 @@ User.init(
     avatar: {
       type: DataTypes.STRING,
     },
+    watermarkText: {
+      type: DataTypes.STRING,
+    },
     password: {
       type: DataTypes.STRING,
     }

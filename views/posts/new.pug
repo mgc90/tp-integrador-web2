@@ -1,0 +1,55 @@
+include ../mixins/alert
+
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    link(rel="stylesheet", href="/styles/output.css")
+    title Nueva publicación
+
+  body(class="bg-black min-h-screen flex items-center justify-center")
+    +alert(alert)
+    div(class="bg-zinc-900 border border-zinc-700 rounded-2xl p-8 w-full max-w-2xl shadow-[0_0_30px_5px_rgba(255,255,255,0.1)]")
+      h1(class="text-red-600 text-4xl text-center mb-8") Fotaza
+      h2(class="text-white text-xl text-center mb-6") Nueva publicación
+
+      form(method='POST', action='/posts/new', enctype='multipart/form-data')
+        div(class="mb-4")
+          label(for='title', class="text-zinc-300 block mb-1") Título
+          input#title(type='text', name='title', required, value=formValues ? formValues.title : '',
+            class="w-full px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-red-500")
+
+        div(class="mb-4")
+          label(for='description', class="text-zinc-300 block mb-1") Descripción
+          textarea#description(name='description', rows='3',
+            class="w-full px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-red-500") #{formValues ? formValues.description : ''}
+
+        div(class="mb-4")
+          label(for='tags', class="text-zinc-300 block mb-1") Etiquetas
+          input#tags(type='text', name='tags', required, value=formValues ? formValues.tags : '',
+            placeholder='ej: naturaleza, paisaje, atardecer',
+            class="w-full px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-red-500")
+          p(class="text-zinc-500 text-sm mt-1") Separadas por coma. Máximo 3.
+
+        div(class="mb-6")
+          p(class="text-zinc-300 mb-3 font-medium") Imágenes (máximo 3)
+
+          - for (let i = 1; i <= 3; i++)
+            div(class="border border-zinc-700 rounded-lg p-4 mb-3")
+              div(class="mb-3")
+                label(for='image' + i, class="text-zinc-400 block mb-1 text-sm") Imagen #{i}
+                input(type='file', name='image' + i, id='image' + i, accept='image/jpeg,image/png,image/gif,image/webp',
+                  class="w-full text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-red-600 file:text-white hover:file:bg-red-700 file:cursor-pointer cursor-pointer")
+              div
+                label(for='license' + i, class="text-zinc-400 block mb-1 text-sm") Licencia
+                select(name='license' + i, id='license' + i,
+                  class="w-full px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-lg text-white focus:outline-none focus:border-red-500")
+                  option(value='no-copyright') Sin Copyright
+                  option(value='copyright') Con Copyright
+
+        button(type='submit',
+          class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors cursor-pointer") Publicar
+
+      p(class="text-zinc-400 text-center mt-6")
+        a(href='/', class="text-red-500 hover:text-red-400") Volver al inicio

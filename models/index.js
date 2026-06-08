@@ -12,7 +12,7 @@ function initializeAssociations() {
   User.hasMany(Post, { foreignKey: 'userId' });
   Post.belongsTo(User, { foreignKey: 'userId' });
 
-  Post.hasMany(Image, { foreignKey: 'postId' });
+  Post.hasMany(Image, { foreignKey: 'postId', as: 'images' });
   Image.belongsTo(Post, { foreignKey: 'postId' });
 
   Post.belongsToMany(Tag, { through: 'PostTag', foreignKey: 'postId' });

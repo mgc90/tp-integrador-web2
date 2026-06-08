@@ -30,9 +30,6 @@ Image.init(
       allowNull: false,
       defaultValue: 'no-copyright',
     },
-    watermarkText: {
-      type: DataTypes.STRING,
-    },
   },
   {
     sequelize,
