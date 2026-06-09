@@ -5,6 +5,7 @@ import { Image } from './models/Image.js';
 import { User } from './models/User.js';
 import authRouter from './routes/auth.js';
 import postsRouter from './routes/posts.js';
+import searchRouter from './routes/search.js';
 import { loadCurrentUser } from './middlewares/auth.js';
 import session from 'express-session';
 
@@ -66,6 +67,7 @@ app.get('/feed', async (req, res) => {
 
 app.use('/auth', authRouter);
 app.use('/posts', postsRouter);
+app.use('/search', searchRouter);
 
 
 // CONEXION A BD

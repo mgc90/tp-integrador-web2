@@ -1,0 +1,18 @@
+extends layout.pug
+include mixins/feed
+
+block metadata
+  title= query ? `"${query}" - Buscar - Fotaza` : 'Buscar - Fotaza'
+
+block content
+  div(class="max-w-7xl mx-auto px-4 py-8")
+    if query
+      h1(class="text-2xl text-white font-semibold mb-1")
+        | Resultados para: 
+        span(class="text-red-400")= query
+      p(class="text-zinc-400 text-sm mb-6")= count + ' resultado(s)'
+
+    if posts.length
+      +feed(posts)
+    else if query
+      p(class="text-zinc-500 text-center py-16 text-lg") No se encontraron publicaciones.
