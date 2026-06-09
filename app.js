@@ -7,6 +7,7 @@ import { Follow } from './models/Follow.js';
 import authRouter from './routes/auth.js';
 import postsRouter from './routes/posts.js';
 import searchRouter from './routes/search.js';
+import usersRouter from './routes/users.js';
 import { loadCurrentUser } from './middlewares/auth.js';
 import session from 'express-session';
 
@@ -82,6 +83,7 @@ app.get('/feed', async (req, res) => {
 app.use('/auth', authRouter);
 app.use('/posts', postsRouter);
 app.use('/search', searchRouter);
+app.use('/users', usersRouter);
 
 
 // CONEXION A BD

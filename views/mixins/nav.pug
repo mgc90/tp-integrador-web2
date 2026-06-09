@@ -8,20 +8,17 @@ mixin item(path, name, active)
 mixin nav
   nav(class="bg-zinc-900 border-b border-zinc-700 px-6 py-3")
     div(class="flex items-center justify-between")
-      ul(class="flex items-center gap-6")
+      ul(class="flex items-center gap-6 ")
         li: a(href='/' class='text-red-600 text-4xl font-medium transition-colors') Fotaza
-        
-        +item('/feed', 'Explorar', currentPath == '/feed')
       include ../partials/searchBar
-      div(class="flex items-center gap-6")
+      div(class="flex items-center gap-6 list-none")
+        +item('/feed', 'Explorar', currentPath == '/feed')
         if currentUser
           +item('/posts/new', 'Nueva publicación', currentPath == '/posts/new')
           +item('/following', 'Siguiendo', currentPath == '/following')
-          +item('/profile', 'Mi perfil', currentPath == '/profile')
-          //img(src='/icons/user-svgrepo-com.svg', alt='Usuario', width='22', height='22')
+          +item('/profile', currentUser.firstName, currentPath == '/profile')
           form(action="/auth/logout", method="post")   
             button(type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors") Salir
-          
         else
           +item('/auth/login', 'Iniciar sesión', currentPath == '/auth/login')
           +item('/auth/signup', 'Registrarse', currentPath == '/auth/signup')

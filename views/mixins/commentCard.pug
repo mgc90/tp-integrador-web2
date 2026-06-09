@@ -3,10 +3,12 @@ mixin commentCard(comment)
     div(class="flex items-center gap-2 text-zinc-400 text-xs mb-1")
       span(class="font-medium text-zinc-300")= comment.User ? comment.User.firstName + ' ' + comment.User.lastName : ''
       if currentUser && comment.User && currentUser.id !== comment.User.id
-        if comment.User.isFollowing
-          button(class="text-xs bg-zinc-700 text-red-400 px-1.5 py-0.5 rounded cursor-pointer") Siguiendo
-        else
-          button(class="text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-1.5 py-0.5 rounded cursor-pointer") Seguir
+        form(method='POST', action='/users/' + comment.User.id + '/follow')
+          input(type='hidden', name='redirect', value=currentPath)
+          if comment.User.isFollowing
+            button(class="text-xs bg-zinc-700 text-red-400 px-1.5 py-0.5 rounded cursor-pointer") Siguiendo
+          else
+            button(class="text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-1.5 py-0.5 rounded cursor-pointer") Seguir
       span= comment.createdAt ? comment.createdAt.toLocaleDateString() : ''
     p(class="text-zinc-200 text-sm")= comment.content
      div(class="flex justify-end gap-3 text-xs")

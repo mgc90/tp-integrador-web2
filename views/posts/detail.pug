@@ -20,10 +20,12 @@ block content
           if post.User
             span Por #{post.User.firstName} #{post.User.lastName}
             if currentUser && currentUser.id !== post.User.id
-              if post.User.isFollowing
-                button(class="text-xs bg-zinc-700 text-red-400 px-2 py-0.5 rounded cursor-pointer") Siguiendo
-              else
-                button(class="text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-2 py-0.5 rounded cursor-pointer") Seguir
+              form(method='POST', action='/users/' + post.User.id + '/follow')
+                input(type='hidden', name='redirect', value=currentPath)
+                if post.User.isFollowing
+                  button(class="text-xs bg-zinc-700 text-red-400 px-2 py-0.5 rounded cursor-pointer") Siguiendo
+                else
+                  button(class="text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-2 py-0.5 rounded cursor-pointer") Seguir
         if post.description
           p(class="text-zinc-300 mb-6")= post.description
 

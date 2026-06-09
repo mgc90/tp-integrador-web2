@@ -1,20 +1,22 @@
 mixin postCard(post, showUser = true)
-  a(href='/posts/' + post.id, class="block")
-    article(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700 h-full flex flex-col")
+  article(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700 h-full flex flex-col")
+    a(href='/posts/' + post.id, class="block flex-1")
       if post.images[0]
         img(src=post.images[0].url
         alt=post.title
         class="w-full aspect-square object-cover")
-      div(class="p-4 flex flex-col flex-1")
+      div(class="p-4")
         h3(class="text-white font-semibold truncate")= post.title
         p(class="text-zinc-400 text-sm mt-1 line-clamp-2")= post.description
-        if showUser
-          div(class="flex items-center justify-between mt-auto text-zinc-500 text-xs")
-            div(class="flex items-center gap-2")
-              span= ("Por " + (post.User && post.User.firstName || '') + ' ' + (post.User && post.User.lastName || '')).trim()
-              if currentUser && post.User && currentUser.id !== post.User.id
-                if post.User.isFollowing
-                  button(class="text-xs bg-zinc-700 text-red-400 px-1.5 py-0.5 rounded cursor-pointer") Siguiendo
-                else
-                  button(class="text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-1.5 py-0.5 rounded cursor-pointer") Seguir
-            span= post.createdAt ? post.createdAt.toLocaleDateString() : ''
+    if showUser
+      div(class="flex items-center justify-between p-4 pt-0 text-zinc-500 text-xs")
+        div(class="flex items-center gap-2")
+          span= ("Por " + (post.User && post.User.firstName || '') + ' ' + (post.User && post.User.lastName || '')).trim()
+          if currentUser && post.User && currentUser.id !== post.User.id
+            form(method='POST', action='/users/' + post.User.id + '/follow')
+              input(type='hidden', name='redirect', value=currentPath)
+              if post.User.isFollowing
+                button(class="text-xs bg-zinc-700 text-red-400 px-1.5 py-0.5 rounded cursor-pointer") Siguiendo
+              else
+                button(class="text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-1.5 py-0.5 rounded cursor-pointer") Seguir
+        span= post.createdAt ? post.createdAt.toLocaleDateString() : ''
