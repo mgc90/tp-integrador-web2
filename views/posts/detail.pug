@@ -25,7 +25,32 @@ block content
         
         div(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700 m-8")
           img(src=image.url, alt=post.title class="w-full aspect-square object-cover")
-            
+
+          div(class="flex items-center gap-2 px-3 py-2 border-t border-zinc-700")
+            - const vals = image.Valorations || []
+            - const vCount = vals.length
+            - const vAvg = vCount ? (vals.reduce((s, v) => s + v.value, 0) / vCount).toFixed(1) : 0
+            - const fullStars = Math.round(vAvg)
+            each i in [1,2,3,4,5]
+              if i <= fullStars
+                span(class="text-yellow-400 text-lg") ★
+              else
+                span(class="text-zinc-600 text-lg") ☆
+            if vCount > 0
+              span(class="text-zinc-400 text-xs") #{vAvg} (#{vCount})
+            else
+              span(class="text-zinc-500 text-xs") Sin valoraciones
+
+            if currentUser && post.User && currentUser.id !== post.User.id
+              - const userVote = vals.find(v => v.userId === currentUser.id)?.value || null
+              if userVote
+                span(class="text-yellow-400 text-xs ml-auto") Tu voto: #{userVote}/5
+              else
+                form(method='POST', action='/posts/' + post.id + '/images/' + image.id + '/rate', class="flex gap-1 ml-auto")
+                  each val in [1,2,3,4,5]
+                    button(type='submit', name='value', value=val,
+                      class="text-zinc-500 hover:text-yellow-400 text-lg cursor-pointer transition-colors") ☆
+
           if !post.commentsEnabled
             div(class="bg-yellow-900/50 border border-yellow-700 text-yellow-300 rounded-lg p-3 mb-6 text-sm")
               | El autor cerró los comentarios para esta publicación.

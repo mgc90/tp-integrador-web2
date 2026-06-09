@@ -3,6 +3,7 @@ import { Image } from "../models/Image.js";
 import { Tag } from "../models/Tag.js";
 import { Comment } from "../models/Comment.js";
 import { User } from "../models/User.js";
+import { Valoration } from "../models/Valoration.js";
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
@@ -16,7 +17,8 @@ export async function detail(req, res) {
           include: [
             { model: Comment,
               include: [{ model: User, attributes: ['id', 'firstName', 'lastName'] }],
-            }
+            },
+            { model: Valoration },
           ]
         }
       ]
@@ -67,6 +69,31 @@ export async function addComment(req, res) {
     res.redirect('/posts/' + postId);
   } catch (error) {
     console.error('[!] Error al comentar:', error);
+    res.redirect('/posts/' + postId);
+  }
+}
+
+export async function rateImage(req, res) {
+  const { postId, imageId } = req.params;
+  const value = Number(req.body.value);
+
+  if (value < 1 || value > 5) return res.redirect('/posts/' + postId);
+
+  try {
+    const post = await Post.findByPk(postId, { attributes: ['userId'] });
+    if (!post) return res.status(404).redirect('/');
+    if (req.session.user.id === post.userId) return res.redirect('/posts/' + postId);
+
+    const existing = await Valoration.findOne({ where: { imageId, userId: req.session.user.id } });
+    if (existing) {
+      await existing.update({ value });
+    } else {
+      await Valoration.create({ imageId: Number(imageId), userId: req.session.user.id, value });
+    }
+
+    res.redirect('/posts/' + postId);
+  } catch (error) {
+    console.error('[!] Error al valorar:', error);
     res.redirect('/posts/' + postId);
   }
 }
