@@ -28,6 +28,10 @@ block content
                   button(class="text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-2 py-0.5 rounded cursor-pointer") Seguir
         if post.description
           p(class="text-zinc-300 mb-6")= post.description
+        if post.Tags && post.Tags.length
+          div(class="flex flex-wrap gap-2 mb-6")
+            each tag in post.Tags
+              span(class="text-red-400/80 text-sm")= '#' + tag.name
 
       each image in post.images
         

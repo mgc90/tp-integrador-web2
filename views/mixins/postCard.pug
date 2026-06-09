@@ -8,6 +8,10 @@ mixin postCard(post, showUser = true)
       div(class="p-4")
         h3(class="text-white font-semibold truncate")= post.title
         p(class="text-zinc-400 text-sm mt-1 line-clamp-2")= post.description
+        if post.Tags && post.Tags.length
+          div(class="flex flex-wrap gap-1 mt-2")
+            each tag in post.Tags
+              span(class="text-zinc-500 text-xs")= '#' + tag.name
     if showUser
       div(class="flex items-center justify-between p-4 pt-0 text-zinc-500 text-xs")
         div(class="flex items-center gap-2")

@@ -13,6 +13,7 @@ export async function detail(req, res) {
   try {
     const post = await Post.findByPk(req.params.postId, {
       include: [
+        { model: Tag },
         { model: User, attributes: ['id', 'firstName', 'lastName'] },
         { model: Image, as: 'images',
           include: [

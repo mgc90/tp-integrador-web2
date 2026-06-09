@@ -3,6 +3,7 @@ import { connectDatabase } from './models/index.js';
 import { Post } from './models/Post.js';
 import { Image } from './models/Image.js';
 import { User } from './models/User.js';
+import { Tag } from './models/Tag.js';
 import { Follow } from './models/Follow.js';
 import authRouter from './routes/auth.js';
 import postsRouter from './routes/posts.js';
@@ -54,6 +55,7 @@ app.get('/feed', async (req, res) => {
   try {
     const posts = await Post.findAll({
       include: [
+        { model: Tag },
         { model: Image, as: 'images', attributes: ['id', 'url', 'license'] },
         { model: User, attributes: ['id', 'firstName', 'lastName'] },
       ],
