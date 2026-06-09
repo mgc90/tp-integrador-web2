@@ -65,7 +65,7 @@ export async function login(req, res) {
   }
 
   // si esta todo ok => luego de redirecciona al home
-  res.redirect('/')
+  res.redirect('/feed')
 }
 
 export async function signupForm(req, res) {
@@ -123,7 +123,7 @@ export async function signup(req, res) {
   }
 
   // si esta todo ok => luego de redirecciona al home
-  res.redirect('/')
+  res.redirect('/login')
 }
 
 export async function logout(req, res) {

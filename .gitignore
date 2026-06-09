@@ -147,3 +147,5 @@ vite.config.ts.timestamp-*
 
 # para tailwind
 public/styles/output.css
+
+public/uploads

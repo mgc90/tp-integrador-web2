@@ -1,14 +1,14 @@
 mixin postCard(post, showUser = true)
   a(href='/posts/' + post.id, class="block")
-    article(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700")
+    article(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700 h-full flex flex-col")
       if post.images[0]
         img(src=post.images[0].url
         alt=post.title
         class="w-full aspect-square object-cover")
-      div(class="p-4")
+      div(class="p-4 flex flex-col flex-1")
         h3(class="text-white font-semibold truncate")= post.title
         p(class="text-zinc-400 text-sm mt-1 line-clamp-2")= post.description
         if showUser
-          div(class="flex items-center justify-between mt-3 text-zinc-500 text-xs")
+          div(class="flex items-center justify-between mt-auto text-zinc-500 text-xs")
             span= ("Por " + (post.User && post.User.firstName || '') + ' ' + (post.User && post.User.lastName || '')).trim()
             span= post.createdAt ? post.createdAt.toLocaleDateString() : ''
