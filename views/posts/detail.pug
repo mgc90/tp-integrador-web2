@@ -16,7 +16,14 @@ block content
           
 
         h2(class="text-white text-3xl font-semibold mb-2")= post.title
-        p(class="text-zinc-400 mb-1")= post.User ? "Por " + post.User.firstName + " " + post.User.lastName : ''
+        p(class="text-zinc-400 mb-1 flex items-center gap-2")
+          if post.User
+            span Por #{post.User.firstName} #{post.User.lastName}
+            if currentUser && currentUser.id !== post.User.id
+              if post.User.isFollowing
+                button(class="text-xs bg-zinc-700 text-red-400 px-2 py-0.5 rounded cursor-pointer") Siguiendo
+              else
+                button(class="text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-2 py-0.5 rounded cursor-pointer") Seguir
         if post.description
           p(class="text-zinc-300 mb-6")= post.description
 

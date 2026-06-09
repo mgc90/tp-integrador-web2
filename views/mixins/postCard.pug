@@ -10,5 +10,11 @@ mixin postCard(post, showUser = true)
         p(class="text-zinc-400 text-sm mt-1 line-clamp-2")= post.description
         if showUser
           div(class="flex items-center justify-between mt-auto text-zinc-500 text-xs")
-            span= ("Por " + (post.User && post.User.firstName || '') + ' ' + (post.User && post.User.lastName || '')).trim()
+            div(class="flex items-center gap-2")
+              span= ("Por " + (post.User && post.User.firstName || '') + ' ' + (post.User && post.User.lastName || '')).trim()
+              if currentUser && post.User && currentUser.id !== post.User.id
+                if post.User.isFollowing
+                  button(class="text-xs bg-zinc-700 text-red-400 px-1.5 py-0.5 rounded cursor-pointer") Siguiendo
+                else
+                  button(class="text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-1.5 py-0.5 rounded cursor-pointer") Seguir
             span= post.createdAt ? post.createdAt.toLocaleDateString() : ''

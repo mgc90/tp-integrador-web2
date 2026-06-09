@@ -4,6 +4,7 @@ import { Tag } from "../models/Tag.js";
 import { Comment } from "../models/Comment.js";
 import { User } from "../models/User.js";
 import { Valoration } from "../models/Valoration.js";
+import { Follow } from "../models/Follow.js";
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
@@ -28,6 +29,43 @@ export async function detail(req, res) {
       return res.status(404).render('index', {
         alert: { status: 'error', text: 'Publicación no encontrada' }
       });
+    }
+
+    if (req.session.user && post.User && req.session.user.id !== post.User.id) {
+      const follow = await Follow.findOne({
+        where: { followerId: req.session.user.id, followedId: post.User.id },
+        attributes: ['id'],
+      });
+      post.User.isFollowing = !!follow;
+    } else if (post.User) {
+      post.User.isFollowing = false;
+    }
+
+    if (req.session.user) {
+      const commentAuthorIds = new Set();
+      for (const image of post.images) {
+        for (const comment of (image.Comments || [])) {
+          if (comment.User && comment.User.id !== req.session.user.id) {
+            commentAuthorIds.add(comment.User.id);
+          }
+        }
+      }
+      if (commentAuthorIds.size) {
+        const follows = await Follow.findAll({
+          where: { followerId: req.session.user.id, followedId: [...commentAuthorIds] },
+          attributes: ['followedId'],
+        });
+        const followedIds = new Set(follows.map(f => f.followedId));
+        for (const image of post.images) {
+          for (const comment of (image.Comments || [])) {
+            if (comment.User && followedIds.has(comment.User.id)) {
+              comment.User.isFollowing = true;
+            } else if (comment.User) {
+              comment.User.isFollowing = false;
+            }
+          }
+        }
+      }
     }
 
     res.render('posts/detail', { post });
