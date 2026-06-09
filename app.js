@@ -36,8 +36,18 @@ app.set('views', './views');
 // MIDDLEWARE GLOBAL - carga currentUser desde la sesion
 app.use(loadCurrentUser);
 
+// currentPath para resaltar link activo en el nav
+app.use((req, res, next) => {
+  res.locals.currentPath = req.path;
+  next();
+});
+
 // RUTAS
-app.get('/', async (req, res) => {
+app.get('/', (req, res) => {
+  res.render('index');
+});
+
+app.get('/feed', async (req, res) => {
   try {
     const posts = await Post.findAll({
       include: [
@@ -46,12 +56,12 @@ app.get('/', async (req, res) => {
       ],
       order: [['createdAt', 'DESC']],
     });
-    res.render('index', { posts });
+    res.render('feedBrowser', { posts });
   } catch (error) {
     console.error('[!] Error al cargar posts:', error);
-    res.render('index', { posts: [] });
+    res.render('feedBrowser', { posts: [] });
   }
-})
+});
 
 
 app.use('/auth', authRouter);

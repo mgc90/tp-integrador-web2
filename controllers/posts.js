@@ -3,6 +3,9 @@ import { Image } from "../models/Image.js";
 import { Tag } from "../models/Tag.js";
 import { Comment } from "../models/Comment.js";
 import { User } from "../models/User.js";
+import sharp from 'sharp';
+import path from 'path';
+import fs from 'fs';
 
 export async function detail(req, res) {
   try {
@@ -98,7 +101,22 @@ export async function create(req, res) {
     const license = req.body['license' + i];
 
     if (file && file[0]) {
-      images.push({ url: '/uploads/' + file[0].filename, license: license || 'no-copyright' });
+      const originalPath = 'public/uploads/' + file[0].filename;
+      const ext = path.extname(file[0].filename);
+      const newFilename = file[0].filename.replace(ext, '.jpg');
+      const newPath = 'public/uploads/' + newFilename;
+
+      const metadata = await sharp(originalPath).metadata();
+      const size = Math.min(metadata.width, metadata.height);
+
+      await sharp(originalPath)
+        .resize(size, size, { fit: 'cover', position: 'center' })
+        .jpeg({ quality: 80 })
+        .toFile(newPath);
+
+      fs.unlinkSync(originalPath);
+
+      images.push({ url: '/uploads/' + newFilename, license: license || 'no-copyright' });
     }
   }
 
@@ -138,7 +156,7 @@ export async function create(req, res) {
       await post.addTag(tag);
     }
 
-    res.redirect('/');
+    res.redirect('/posts/' + post.id);
   } catch (error) {
     console.error('[!] Error al crear publicación:', error);
     res.status(500).render('posts/new', {

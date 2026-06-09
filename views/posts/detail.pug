@@ -7,28 +7,30 @@ block metadata
   title= post.title + ' - Fotaza'
 
 block content
-  div(class="max-w-4xl mx-auto")
-    h2(class="text-white text-3xl font-semibold mb-2")= post.title
-    p(class="text-zinc-400 mb-1")= post.User? post.User.firstName + " " + post.User.lastName : ''
-    if post.description
-      p(class="text-zinc-300 mb-6")= post.description
+  div(class="max-w-2xl mx-auto")
+    
 
-    if !post.commentsEnabled
-      div(class="bg-yellow-900/50 border border-yellow-700 text-yellow-300 rounded-lg p-3 mb-6 text-sm")
-        | El autor cerró los comentarios para esta publicación.
-
-    div(class="space-y-8")
+    div(class="m-10")
       each image in post.images
         div(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700")
           img(src=image.url, alt=post.title,
               class="w-full aspect-square object-cover")
-          div(class="p-4")
-            div(class="flex items-center gap-2 mb-3")
+          div(class="p-2")
+            div(class="flex items-center gap-2 mb-1")
               span(class="text-xs text-zinc-500 bg-zinc-700 px-2 py-1 rounded")
                 if image.license === 'copyright'
                   | Con Copyright
                 else
                   | Sin Copyright
+
+            h2(class="text-white text-3xl font-semibold mb-2")= post.title
+            p(class="text-zinc-400 mb-1")= post.User ? "Por " + post.User.firstName + " " + post.User.lastName : ''
+            if post.description
+              p(class="text-zinc-300 mb-6")= post.description
+
+            if !post.commentsEnabled
+              div(class="bg-yellow-900/50 border border-yellow-700 text-yellow-300 rounded-lg p-3 mb-6 text-sm")
+                | El autor cerró los comentarios para esta publicación.
 
             h4(class="text-zinc-400 text-sm font-medium mb-3") Comentarios
 
