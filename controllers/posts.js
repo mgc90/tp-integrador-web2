@@ -131,7 +131,7 @@ export async function create(req, res) {
     if (file && file[0]) {
       const originalPath = 'public/uploads/' + file[0].filename;
       const ext = path.extname(file[0].filename);
-      const newFilename = file[0].filename.replace(ext, '.jpg');
+      const newFilename = file[0].filename.replace(ext, '_resized.jpg');
       const newPath = 'public/uploads/' + newFilename;
 
       const metadata = await sharp(originalPath).metadata();
