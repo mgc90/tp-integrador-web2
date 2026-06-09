@@ -123,7 +123,7 @@ export async function signup(req, res) {
   }
 
   // si esta todo ok => luego de redirecciona al home
-  res.redirect('/login')
+  res.redirect('/auth/login')
 }
 
 export async function logout(req, res) {

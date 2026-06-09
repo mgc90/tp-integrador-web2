@@ -71,6 +71,34 @@ export async function addComment(req, res) {
   }
 }
 
+export async function closeComments(req, res) {
+  try {
+    const post = await Post.findByPk(req.params.postId);
+    if (!post) return res.status(404).redirect('/');
+    if (!req.session.user || req.session.user.id !== post.userId)
+      return res.status(403).redirect('/posts/' + post.id);
+    await post.update({ commentsEnabled: false });
+    res.redirect('/posts/' + post.id);
+  } catch (error) {
+    console.error('[!] Error al cerrar comentarios:', error);
+    res.redirect('/posts/' + post.id);
+  }
+}
+
+export async function openComments(req, res) {
+  try {
+    const post = await Post.findByPk(req.params.postId);
+    if (!post) return res.status(404).redirect('/');
+    if (!req.session.user || req.session.user.id !== post.userId)
+      return res.status(403).redirect('/posts/' + post.id);
+    await post.update({ commentsEnabled: true });
+    res.redirect('/posts/' + post.id);
+  } catch (error) {
+    console.error('[!] Error al abrir comentarios:', error);
+    res.redirect('/posts/' + post.id);
+  }
+}
+
 export async function createForm(req, res) {
   res.render('posts/new');
 }
