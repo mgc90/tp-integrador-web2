@@ -7,28 +7,54 @@ import { Op } from "sequelize";
 
 export async function search(req, res) {
   const q = (req.query.q || '').trim();
+  const activeFilters = [].concat(req.query.filter || []);
+  const sort = req.query.sort || '';
 
   if (!q) {
-    return res.render('search', { posts: [], query: '', count: 0 });
+    return res.render('search', { posts: [], query: '', count: 0, activeFilters, sort });
   }
 
   try {
+    const orConditions = [];
+
+    if (activeFilters.length === 0) {
+      orConditions.push(
+        { title: { [Op.iLike]: `%${q}%` } },
+        { description: { [Op.iLike]: `%${q}%` } },
+        { '$Tags.name$': { [Op.iLike]: `%${q}%` } },
+        { '$User.firstName$': { [Op.iLike]: `%${q}%` } },
+        { '$User.lastName$': { [Op.iLike]: `%${q}%` } },
+      );
+    } else {
+      if (activeFilters.includes('title')) {
+        orConditions.push(
+          { title: { [Op.iLike]: `%${q}%` } },
+          { description: { [Op.iLike]: `%${q}%` } },
+        );
+      }
+      if (activeFilters.includes('author')) {
+        orConditions.push(
+          { '$User.firstName$': { [Op.iLike]: `%${q}%` } },
+          { '$User.lastName$': { [Op.iLike]: `%${q}%` } },
+        );
+      }
+      if (activeFilters.includes('tag')) {
+        orConditions.push(
+          { '$Tags.name$': { [Op.iLike]: `%${q}%` } },
+        );
+      }
+    }
+
+    const order = sort === 'oldest' ? [['createdAt', 'ASC']] : [['createdAt', 'DESC']];
+
     const posts = await Post.findAll({
       include: [
         { model: Image, as: 'images' },
         { model: User, attributes: ['id', 'firstName', 'lastName'] },
         { model: Tag },
       ],
-      where: {
-        [Op.or]: [
-          { title: { [Op.iLike]: `%${q}%` } },
-          { description: { [Op.iLike]: `%${q}%` } },
-          { '$Tags.name$': { [Op.iLike]: `%${q}%` } },
-          { '$User.firstName$': { [Op.iLike]: `%${q}%` } },
-          { '$User.lastName$': { [Op.iLike]: `%${q}%` } },
-        ],
-      },
-      order: [['createdAt', 'DESC']],
+      where: { [Op.or]: orConditions },
+      order,
       distinct: true,
     });
 
@@ -44,9 +70,12 @@ export async function search(req, res) {
       }
     }
 
-    res.render('search', { posts, query: q, count: posts.length });
+    res.locals.searchQuery = q;
+    res.locals.searchFilters = activeFilters;
+    res.locals.searchSort = sort;
+    res.render('search', { posts, query: q, count: posts.length, activeFilters, sort });
   } catch (error) {
     console.error('[!] Error en búsqueda:', error);
-    res.render('search', { posts: [], query: q, count: 0 });
+    res.render('search', { posts: [], query: q, count: 0, activeFilters, sort });
   }
 }

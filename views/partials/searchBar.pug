@@ -3,6 +3,11 @@ form(action="/search", method="GET", class="flex items-center gap-2")
     type="text",
     name="q",
     placeholder="Busca por título, etiqueta o usuario",
+    value= (currentPath === '/search' && searchQuery ? searchQuery : ''),
     class="bg-zinc-800 text-zinc-200 px-4 py-2 rounded-lg border border-zinc-600 focus:outline-none focus:border-red-500 w-80"
   )
+  each filter in (currentPath === '/search' ? searchFilters || [] : [])
+    input(type="hidden", name="filter", value=filter)
+  if currentPath === '/search' && searchSort
+    input(type="hidden", name="sort", value=searchSort)
   button(type="submit", class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors") Buscar

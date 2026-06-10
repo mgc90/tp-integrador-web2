@@ -10,7 +10,37 @@ block content
       h1(class="text-2xl text-white font-semibold mb-1")
         | Resultados para: 
         span(class="text-red-400")= query
-      p(class="text-zinc-400 text-sm mb-6")= count + ' resultado(s)'
+      p(class="text-zinc-400 text-sm mb-4")= count + ' resultado(s)'
+
+      - function toggleFilterUrl(filter) {
+      -   const others = activeFilters.filter(f => f !== filter)
+      -   let url = '/search?q=' + encodeURIComponent(query)
+      -   if (others.length) url += '&filter=' + others.map(encodeURIComponent).join('&filter=')
+      -   if (!activeFilters.includes(filter)) url += '&filter=' + encodeURIComponent(filter)
+      -   if (sort === 'oldest') url += '&sort=oldest'
+      -   return url
+      - }
+
+      - function toggleSortUrl() {
+      -   let url = '/search?q=' + encodeURIComponent(query)
+      -   if (activeFilters.length) url += '&filter=' + activeFilters.map(encodeURIComponent).join('&filter=')
+      -   if (sort !== 'oldest') url += '&sort=oldest'
+      -   return url
+      - }
+
+      div(class="flex items-center gap-2 mb-6 text-sm")
+        span(class="text-zinc-400 font-medium") Filtrar por:
+        each btn in [{ key: 'title', label: 'Título' }, { key: 'author', label: 'Autor' }, { key: 'tag', label: 'Etiqueta' }]
+          - var isActive = activeFilters.includes(btn.key)
+          a(href=toggleFilterUrl(btn.key),
+            class="px-3 py-1.5 rounded-full border transition-colors cursor-pointer " +
+            (isActive ? "bg-red-600 border-red-600 text-white" : "border-zinc-600 text-zinc-300 hover:border-zinc-500"))
+            = btn.label
+        - var sortActive = sort === 'oldest'
+        a(href=toggleSortUrl(),
+          class="px-3 py-1.5 rounded-full border transition-colors cursor-pointer " +
+          (sortActive ? "bg-red-600 border-red-600 text-white" : "border-zinc-600 text-zinc-300 hover:border-zinc-500"))
+          | Más antiguo
 
     if posts.length
       +feed(posts)
