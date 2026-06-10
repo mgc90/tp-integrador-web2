@@ -4,6 +4,7 @@ import { Tag } from "../models/Tag.js";
 import { Comment } from "../models/Comment.js";
 import { User } from "../models/User.js";
 import { Valoration } from "../models/Valoration.js";
+import { Interest } from "../models/Interest.js";
 import { Follow } from "../models/Follow.js";
 import sharp from 'sharp';
 import path from 'path';
@@ -21,6 +22,7 @@ export async function detail(req, res) {
               include: [{ model: User, attributes: ['id', 'firstName', 'lastName'] }],
             },
             { model: Valoration },
+            { model: Interest, attributes: ['userId', 'activo'] },
           ]
         }
       ]
@@ -66,6 +68,15 @@ export async function detail(req, res) {
             }
           }
         }
+      }
+    }
+
+    if (req.session.user) {
+      const userId = req.session.user.id;
+      for (const image of post.images) {
+        const interests = image.Interests || [];
+        image.userInterested = interests.some(i => i.userId === userId && i.activo);
+        image.activeInterestCount = interests.filter(i => i.activo).length;
       }
     }
 
@@ -162,6 +173,31 @@ export async function openComments(req, res) {
   } catch (error) {
     console.error('[!] Error al abrir comentarios:', error);
     res.redirect('/posts/' + post.id);
+  }
+}
+
+export async function toggleInterest(req, res) {
+  const { postId, imageId } = req.params;
+  const userId = req.session.user.id;
+
+  try {
+    const post = await Post.findByPk(postId, { attributes: ['userId'] });
+    if (!post) return res.status(404).redirect('/');
+    if (post.userId === userId) return res.redirect('/posts/' + postId);
+
+    const [existing, created] = await Interest.findOrCreate({
+      where: { imageId: Number(imageId), userId },
+      defaults: { activo: true },
+    });
+
+    if (!created) {
+      await existing.update({ activo: !existing.activo });
+    }
+
+    res.redirect('/posts/' + postId);
+  } catch (error) {
+    console.error('[!] Error al registrar interés:', error);
+    res.redirect('/posts/' + postId);
   }
 }
 

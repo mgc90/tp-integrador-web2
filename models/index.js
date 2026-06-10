@@ -54,6 +54,13 @@ export async function connectDatabase() {
     console.log('[+] Conexion a bd establecida')
     await sequelize.sync({ alter: true });
     console.log('[+] Sincronizado de modelos')
+
+    try {
+      await sequelize.query(`UPDATE interests SET activo = false WHERE "deletedAt" IS NOT NULL`);
+      console.log('[+] Migración de intereses completada');
+    } catch (e) {
+      // la columna deletedAt puede no existir si es la primera vez o ya se migró
+    }
   } catch (error) {
     console.error('[+] Error en la conexion a la bd', error)
     throw error

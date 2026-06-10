@@ -74,12 +74,23 @@ block content
               | El autor cerró los comentarios para esta publicación.
           
           div(class="flex items-center justify-between m-1")
-            h4(class="text-zinc-400 text-sm font-medium ") Comentarios
-            span(class="text-xs text-zinc-500 bg-zinc-700 px-2 py-1 rounded")
-              if image.license === 'copyright'
-                | Con Copyright
-              else
-                | Sin Copyright
+            div(class="flex items-center gap-2")
+              h4(class="text-zinc-400 text-sm font-medium") Comentarios
+              span(class="text-xs text-zinc-500 bg-zinc-700 px-2 py-1 rounded")
+                if image.license === 'copyright'
+                  | Con Copyright
+                else
+                  | Sin Copyright
+            if currentUser && post.User && currentUser.id !== post.User.id
+              form(method='POST', action='/posts/' + post.id + '/images/' + image.id + '/interest')
+                button(type='submit',
+                  class="text-xs border px-2 py-1 rounded cursor-pointer transition-colors " +
+                  (image.userInterested
+                    ? "border-red-500 text-red-400 bg-red-900/20"
+                    : "border-zinc-600 text-zinc-300 hover:border-red-500 hover:text-red-400"))
+                  | #{image.userInterested ? 'Le interesa' : 'Me interesa'}
+            if currentUser && post.User && currentUser.id === post.User.id
+              span(class="text-xs text-zinc-500") #{image.activeInterestCount} interesado(s)
 
           if currentUser && post.User && currentUser.id === post.User.id
             if post.commentsEnabled

@@ -20,13 +20,16 @@ Interest.init(
       allowNull: false,
       references: { model: 'users', key: 'id' },
     },
+    activo: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
   },
   {
     sequelize,
     modelName: 'Interest',
     tableName: 'interests',
     createdAt: true,
-    deletedAt: true,
     indexes: [
       { unique: true, fields: ['imageId', 'userId'] },
     ],
