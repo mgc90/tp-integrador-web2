@@ -1,0 +1,20 @@
+extends layout.pug
+
+block metadata
+  title= user.firstName + ' ' + user.lastName + ' - Perfil - Fotaza'
+
+block content
+  div(class="max-w-2xl mx-auto px-4 py-12")
+    div(class="bg-zinc-800 rounded-lg border border-zinc-700 p-8")
+      div(class="flex flex-col items-center")
+        img(
+          src=user.avatar || '/imgs/defaultUser.jpg',
+          alt="Avatar de " + user.firstName,
+          class="w-32 h-32 rounded-full object-cover border-4 border-zinc-600"
+        )
+        h1(class="text-2xl text-white font-semibold mt-4")= user.firstName + ' ' + user.lastName
+        p(class="text-zinc-400 mt-1")= user.email
+        div(class="flex items-center gap-3 mt-3 text-zinc-400 text-sm")
+          span= followersCount + ' seguidores'
+          span ·
+          span= followingCount + ' seguidos'

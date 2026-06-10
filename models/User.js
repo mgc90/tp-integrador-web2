@@ -34,6 +34,7 @@ User.init(
     },
     avatar: {
       type: DataTypes.STRING,
+      defaultValue: '/imgs/defaultUser.jpg',
     },
     watermarkText: {
       type: DataTypes.STRING,

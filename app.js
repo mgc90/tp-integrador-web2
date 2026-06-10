@@ -9,6 +9,7 @@ import authRouter from './routes/auth.js';
 import postsRouter from './routes/posts.js';
 import searchRouter from './routes/search.js';
 import usersRouter from './routes/users.js';
+import profileRouter from './routes/profile.js';
 import { loadCurrentUser } from './middlewares/auth.js';
 import session from 'express-session';
 
@@ -86,6 +87,7 @@ app.use('/auth', authRouter);
 app.use('/posts', postsRouter);
 app.use('/search', searchRouter);
 app.use('/users', usersRouter);
+app.use('/profile', profileRouter);
 
 
 // CONEXION A BD
