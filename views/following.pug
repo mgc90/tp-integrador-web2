@@ -1,0 +1,11 @@
+extends layout.pug
+include mixins/feed
+
+block metadata
+  title Siguiendo - Fotaza
+
+block content
+  if posts.length === 0
+    p(class="text-zinc-500 text-center py-16 text-lg") No hay publicaciones de usuarios que sigues.
+  else
+    +feed(posts)
