@@ -7,8 +7,7 @@ import { Valoration } from "../models/Valoration.js";
 import { Interest } from "../models/Interest.js";
 import { Follow } from "../models/Follow.js";
 import sharp from 'sharp';
-import path from 'path';
-import fs from 'fs';
+import cloudinary from '../config/cloudinary.js';
 
 export async function detail(req, res) {
   try {
@@ -239,22 +238,24 @@ export async function create(req, res) {
     const license = req.body['license' + i];
 
     if (file && file[0]) {
-      const originalPath = 'public/uploads/' + file[0].filename;
-      const ext = path.extname(file[0].filename);
-      const newFilename = file[0].filename.replace(ext, '_resized.jpg');
-      const newPath = 'public/uploads/' + newFilename;
-
-      const metadata = await sharp(originalPath).metadata();
+      const buffer = file[0].buffer;
+      const metadata = await sharp(buffer).metadata();
       const size = Math.min(metadata.width, metadata.height);
 
-      await sharp(originalPath)
+      const processedBuffer = await sharp(buffer)
         .resize(size, size, { fit: 'cover', position: 'center' })
         .jpeg({ quality: 80 })
-        .toFile(newPath);
+        .toBuffer();
 
-      fs.unlinkSync(originalPath);
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'fotaza' },
+          (error, result) => error ? reject(error) : resolve(result)
+        );
+        stream.end(processedBuffer);
+      });
 
-      images.push({ url: '/uploads/' + newFilename, license: license || 'no-copyright' });
+      images.push({ url: result.secure_url, license: license || 'no-copyright' });
     }
   }
 
