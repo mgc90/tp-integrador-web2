@@ -1,5 +1,6 @@
 extends layout.pug
 include mixins/feed
+include mixins/filterByOrderBar
 
 block metadata
   title= query ? `"${query}" - Buscar - Fotaza` : 'Buscar - Fotaza'
@@ -21,13 +22,6 @@ block content
       -   return url
       - }
 
-      - function toggleSortUrl(sortValue) {
-      -   let url = '/search?q=' + encodeURIComponent(query)
-      -   if (activeFilters.length) url += '&filter=' + activeFilters.map(encodeURIComponent).join('&filter=')
-      -   if (sortValue !== 'newest') url += '&sort=' + sortValue
-      -   return url
-      - }
-
       div(class="flex items-center gap-2 mb-6 text-sm flex-wrap")
         span(class="text-zinc-400 font-medium") Filtrar por:
         each btn in [{ key: 'title', label: 'Título' }, { key: 'author', label: 'Autor' }, { key: 'tag', label: 'Etiqueta' }]
@@ -37,12 +31,7 @@ block content
             (isActive ? "bg-red-600 border-red-600 text-white" : "border-zinc-600 text-zinc-300 hover:border-zinc-500"))
             = btn.label
         span(class="text-zinc-400 font-medium ml-2") Orden:
-        each sortBtn in [{ key: 'newest', label: 'Más reciente' }, { key: 'oldest', label: 'Más antiguo' }, { key: 'rating', label: 'Mejor valorado' }]
-          - var isSortActive = (sort === sortBtn.key) || (sortBtn.key === 'newest' && !sort)
-          a(href=toggleSortUrl(sortBtn.key),
-            class="px-3 py-1.5 rounded-full border transition-colors cursor-pointer " +
-            (isSortActive ? "bg-red-600 border-red-600 text-white" : "border-zinc-600 text-zinc-300 hover:border-zinc-500"))
-            = sortBtn.label
+        +filterByOrderBar({ sort, query, activeFilters, baseUrl: '/search' })
 
     if posts.length
       +feed(posts)

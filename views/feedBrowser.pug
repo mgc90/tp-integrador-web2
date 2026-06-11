@@ -1,8 +1,12 @@
 extends layout.pug
 include mixins/feed
+include mixins/filterByOrderBar
 
 block metadata
   title Explorar - Fotaza
 
 block content
+  div(class="flex items-center gap-2 mb-6 mt-6 text-sm max-w-7xl mx-auto px-4")
+    span(class="text-zinc-400 font-medium") Orden:
+    +filterByOrderBar({ sort, baseUrl: '/feed' })
   +feed(posts)
