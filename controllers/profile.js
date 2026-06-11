@@ -63,6 +63,18 @@ export async function following(req, res) {
         where: { userId: followedIds },
         order,
       });
+
+      if (req.session.user) {
+        const authorIds = posts.map(p => p.userId).filter(Boolean);
+        const follows = await Follow.findAll({
+          where: { followerId: req.session.user.id, followedId: authorIds },
+          attributes: ['followedId'],
+        });
+        const followedIdsSet = new Set(follows.map(f => f.followedId));
+        for (const post of posts) {
+          if (post.User) post.User.isFollowing = followedIdsSet.has(post.User.id);
+        }
+      }
     }
 
     res.locals.searchSort = sort;

@@ -8,7 +8,7 @@ import { Valoration } from './Valoration.js';
 import { Interest } from './Interest.js';
 import { Follow } from './Follow.js';
 
-function initializeAssociations() {
+export function initializeAssociations() {
   User.hasMany(Post, { foreignKey: 'userId' });
   Post.belongsTo(User, { foreignKey: 'userId' });
 
@@ -52,26 +52,10 @@ export async function connectDatabase() {
     initializeAssociations();
     await sequelize.authenticate();
     console.log('[+] Conexion a bd establecida')
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: true }); // CAMBIAR POR FALSE EN PRODUCCIÓN PARA 
+    // EVITAR BORRADO ACCIDENTAL DE COLUMNAS PARA CREAR SÓLO TABLAS QUE NO EXISTEN
     console.log('[+] Sincronizado de modelos')
-
-    try {
-      await sequelize.query(`UPDATE interests SET activo = false WHERE "deletedAt" IS NOT NULL`);
-      console.log('[+] Migración de intereses completada');
-    } catch (e) {
-      // columna deletedAt no existe (primera vez o ya migrada)
-    }
-
-    try {
-      await sequelize.query(`
-        UPDATE images SET "commentsEnabled" = false
-        FROM posts
-        WHERE images."postId" = posts.id AND posts."commentsEnabled" = false
-      `);
-      console.log('[+] Migración de comentarios por imagen completada');
-    } catch (e) {
-      // columnas pueden no existir aún o ya migradas
-    }
+ 
   } catch (error) {
     console.error('[+] Error en la conexion a la bd', error)
     throw error
