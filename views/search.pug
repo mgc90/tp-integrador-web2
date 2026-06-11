@@ -17,18 +17,18 @@ block content
       -   let url = '/search?q=' + encodeURIComponent(query)
       -   if (others.length) url += '&filter=' + others.map(encodeURIComponent).join('&filter=')
       -   if (!activeFilters.includes(filter)) url += '&filter=' + encodeURIComponent(filter)
-      -   if (sort === 'oldest') url += '&sort=oldest'
+      -   if (sort) url += '&sort=' + encodeURIComponent(sort)
       -   return url
       - }
 
-      - function toggleSortUrl() {
+      - function toggleSortUrl(sortValue) {
       -   let url = '/search?q=' + encodeURIComponent(query)
       -   if (activeFilters.length) url += '&filter=' + activeFilters.map(encodeURIComponent).join('&filter=')
-      -   if (sort !== 'oldest') url += '&sort=oldest'
+      -   if (sortValue !== 'newest') url += '&sort=' + sortValue
       -   return url
       - }
 
-      div(class="flex items-center gap-2 mb-6 text-sm")
+      div(class="flex items-center gap-2 mb-6 text-sm flex-wrap")
         span(class="text-zinc-400 font-medium") Filtrar por:
         each btn in [{ key: 'title', label: 'Título' }, { key: 'author', label: 'Autor' }, { key: 'tag', label: 'Etiqueta' }]
           - var isActive = activeFilters.includes(btn.key)
@@ -36,11 +36,13 @@ block content
             class="px-3 py-1.5 rounded-full border transition-colors cursor-pointer " +
             (isActive ? "bg-red-600 border-red-600 text-white" : "border-zinc-600 text-zinc-300 hover:border-zinc-500"))
             = btn.label
-        - var sortActive = sort === 'oldest'
-        a(href=toggleSortUrl(),
-          class="px-3 py-1.5 rounded-full border transition-colors cursor-pointer " +
-          (sortActive ? "bg-red-600 border-red-600 text-white" : "border-zinc-600 text-zinc-300 hover:border-zinc-500"))
-          | Más antiguo
+        span(class="text-zinc-400 font-medium ml-2") Orden:
+        each sortBtn in [{ key: 'newest', label: 'Más reciente' }, { key: 'oldest', label: 'Más antiguo' }, { key: 'rating', label: 'Mejor valorado' }]
+          - var isSortActive = (sort === sortBtn.key) || (sortBtn.key === 'newest' && !sort)
+          a(href=toggleSortUrl(sortBtn.key),
+            class="px-3 py-1.5 rounded-full border transition-colors cursor-pointer " +
+            (isSortActive ? "bg-red-600 border-red-600 text-white" : "border-zinc-600 text-zinc-300 hover:border-zinc-500"))
+            = sortBtn.label
 
     if posts.length
       +feed(posts)

@@ -4,6 +4,7 @@ import { User } from "../models/User.js";
 import { Tag } from "../models/Tag.js";
 import { Follow } from "../models/Follow.js";
 import { Op } from "sequelize";
+import sequelize from "../models/config.js";
 
 export async function search(req, res) {
   const q = (req.query.q || '').trim();
@@ -45,7 +46,19 @@ export async function search(req, res) {
       }
     }
 
-    const order = sort === 'oldest' ? [['createdAt', 'ASC']] : [['createdAt', 'DESC']];
+    let order;
+    if (sort === 'oldest') {
+      order = [['createdAt', 'ASC']];
+    } else if (sort === 'rating') {
+      order = [[sequelize.literal(`(
+        SELECT COALESCE(AVG("v"."value"), 0)
+        FROM "valorations" AS "v"
+        INNER JOIN "images" AS "i" ON "i"."id" = "v"."imageId"
+        WHERE "i"."postId" = "Post"."id"
+      )`), 'DESC NULLS LAST']];
+    } else {
+      order = [['createdAt', 'DESC']];
+    }
 
     const posts = await Post.findAll({
       include: [
