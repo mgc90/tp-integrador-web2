@@ -6,21 +6,39 @@ import { Follow } from "../models/Follow.js";
 import sequelize from "../models/config.js";
 
 export async function feed(req, res) {
-  const sort = req.query.sort || '';
+  const sort = req.query.sort || 'most-voted';
 
   try {
     let order;
     if (sort === 'oldest') {
       order = [['createdAt', 'ASC']];
-    } else if (sort === 'rating') {
-      order = [[sequelize.literal(`(
-        SELECT COALESCE(AVG("v"."value"), 0)
-        FROM "valorations" AS "v"
-        INNER JOIN "images" AS "i" ON "i"."id" = "v"."imageId"
-        WHERE "i"."postId" = "Post"."id"
-      )`), 'DESC NULLS LAST']];
-    } else {
+    } else if (sort === 'newest') {
       order = [['createdAt', 'DESC']];
+    } else if (sort === 'rating') {
+      order = [
+        [sequelize.literal(`(
+          SELECT COALESCE(AVG("v"."value"), 0)
+          FROM "valorations" AS "v"
+          INNER JOIN "images" AS "i" ON "i"."id" = "v"."imageId"
+          WHERE "i"."postId" = "Post"."id"
+        )`), 'DESC NULLS LAST'],
+        [sequelize.literal(`(
+          SELECT COUNT("v"."id")
+          FROM "valorations" AS "v"
+          INNER JOIN "images" AS "i" ON "i"."id" = "v"."imageId"
+          WHERE "i"."postId" = "Post"."id"
+        )`), 'DESC NULLS LAST'],
+      ];
+    } else {
+      order = [[sequelize.literal(`(
+        SELECT COALESCE(MAX(cnt), 0) FROM (
+          SELECT COUNT("v"."id") * 100000 + ROUND(COALESCE(AVG("v"."value"), 0)::numeric, 2)::float8 AS cnt
+          FROM "images" AS "i"
+          LEFT JOIN "valorations" AS "v" ON "v"."imageId" = "i"."id"
+          WHERE "i"."postId" = "Post"."id"
+          GROUP BY "i"."id"
+        ) AS sub
+      )`), 'DESC NULLS LAST']];
     }
 
     const posts = await Post.findAll({

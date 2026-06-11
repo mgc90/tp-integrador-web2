@@ -44,11 +44,31 @@ export async function following(req, res) {
       if (sort === 'oldest') {
         order = [['createdAt', 'ASC']];
       } else if (sort === 'rating') {
+        order = [
+          [sequelize.literal(`(
+            SELECT COALESCE(AVG("v"."value"), 0)
+            FROM "valorations" AS "v"
+            INNER JOIN "images" AS "i" ON "i"."id" = "v"."imageId"
+            WHERE "i"."postId" = "Post"."id"
+          )`), 'DESC NULLS LAST'],
+          [sequelize.literal(`(
+            SELECT COUNT("v"."id")
+            FROM "valorations" AS "v"
+            INNER JOIN "images" AS "i" ON "i"."id" = "v"."imageId"
+            WHERE "i"."postId" = "Post"."id"
+          )`), 'DESC NULLS LAST'],
+        ];
+      } else if (sort === 'newest') {
+        order = [['createdAt', 'DESC']];
+      } else if (sort === 'most-voted') {
         order = [[sequelize.literal(`(
-          SELECT COALESCE(AVG("v"."value"), 0)
-          FROM "valorations" AS "v"
-          INNER JOIN "images" AS "i" ON "i"."id" = "v"."imageId"
-          WHERE "i"."postId" = "Post"."id"
+          SELECT COALESCE(MAX(cnt), 0) FROM (
+            SELECT COUNT("v"."id") * 100000 + ROUND(COALESCE(AVG("v"."value"), 0)::numeric, 2)::float8 AS cnt
+            FROM "images" AS "i"
+            LEFT JOIN "valorations" AS "v" ON "v"."imageId" = "i"."id"
+            WHERE "i"."postId" = "Post"."id"
+            GROUP BY "i"."id"
+          ) AS sub
         )`), 'DESC NULLS LAST']];
       } else {
         order = [['createdAt', 'DESC']];

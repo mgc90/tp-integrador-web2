@@ -52,7 +52,7 @@ export async function connectDatabase() {
     initializeAssociations();
     await sequelize.authenticate();
     console.log('[+] Conexion a bd establecida')
-    await sequelize.sync({ alter: true }); // CAMBIAR POR FALSE EN PRODUCCIÓN PARA 
+    await sequelize.sync({ alter: false }); // CAMBIAR POR FALSE EN PRODUCCIÓN PARA 
     // EVITAR BORRADO ACCIDENTAL DE COLUMNAS PARA CREAR SÓLO TABLAS QUE NO EXISTEN
     console.log('[+] Sincronizado de modelos')
  

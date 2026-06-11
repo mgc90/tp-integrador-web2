@@ -40,9 +40,9 @@ block content
           if currentUser || image.license === 'no-copyright'
             img(src=image.url, alt=post.title class="w-full aspect-square object-cover")
           else
-            div(class="w-full aspect-square bg-zinc-900 border-b border-zinc-700 flex flex-col items-center justify-center gap-3")
-              p(class="text-zinc-400 text-sm text-center px-4") Inicia sesión para ver esta imagen con derechos de autor
-              a(href='/auth/login', class="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-lg transition-colors") Iniciar sesión
+            div(class="w-full aspect-square bg-zinc-900 border-b border-zinc-700 flex flex-col items-center justify-center p-6")
+              p(class="text-zinc-400 text-5xl text-center px-4") Inicia sesión para ver esta imagen con derechos de autor
+              a(href='/auth/login', class="bg-red-600 hover:bg-red-700 text-white text-sm mt-20 px-4 py-2 rounded-lg transition-colors") Iniciar sesión
 
           div(class="flex items-center gap-2 px-3 py-2 border-t border-zinc-700")
             - const vals = image.Valorations || []

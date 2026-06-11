@@ -4,14 +4,14 @@ mixin filterByOrderBar(opts = {})
   - var activeFilters = opts.activeFilters || []
   - var baseUrl = opts.baseUrl || '/feed'
 
-  each sortBtn in [{ key: 'newest', label: 'Más reciente' }, { key: 'oldest', label: 'Más antiguo' }, { key: 'rating', label: 'Mejor valorado' }]
+  each sortBtn in [{ key: 'newest', label: 'Más reciente' }, { key: 'oldest', label: 'Más antiguo' }, { key: 'rating', label: 'Mejor valorado' }, { key: 'most-voted', label: 'Más votado' }]
     - var url = baseUrl
     - var params = []
     - if (query) params.push('q=' + encodeURIComponent(query))
     - if (activeFilters.length) params.push('filter=' + activeFilters.map(encodeURIComponent).join('&filter='))
-    - if (sortBtn.key !== 'newest') params.push('sort=' + sortBtn.key)
+    - params.push('sort=' + sortBtn.key)
     - if (params.length) url += '?' + params.join('&')
-    - var isActive = (sort === sortBtn.key) || (sortBtn.key === 'newest' && !sort)
+    - var isActive = (sort === sortBtn.key)
     a(href=url,
       class="px-3 py-1.5 rounded-full border transition-colors cursor-pointer " +
       (isActive ? "bg-red-600 border-red-600 text-white" : "border-zinc-600 text-zinc-300 hover:border-zinc-500"))
