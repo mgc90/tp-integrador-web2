@@ -59,7 +59,18 @@ export async function connectDatabase() {
       await sequelize.query(`UPDATE interests SET activo = false WHERE "deletedAt" IS NOT NULL`);
       console.log('[+] Migración de intereses completada');
     } catch (e) {
-      // la columna deletedAt puede no existir si es la primera vez o ya se migró
+      // columna deletedAt no existe (primera vez o ya migrada)
+    }
+
+    try {
+      await sequelize.query(`
+        UPDATE images SET "commentsEnabled" = false
+        FROM posts
+        WHERE images."postId" = posts.id AND posts."commentsEnabled" = false
+      `);
+      console.log('[+] Migración de comentarios por imagen completada');
+    } catch (e) {
+      // columnas pueden no existir aún o ya migradas
     }
   } catch (error) {
     console.error('[+] Error en la conexion a la bd', error)

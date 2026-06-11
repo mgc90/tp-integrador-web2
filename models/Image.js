@@ -30,6 +30,10 @@ Image.init(
       allowNull: false,
       defaultValue: 'no-copyright',
     },
+    commentsEnabled: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
   },
   {
     sequelize,

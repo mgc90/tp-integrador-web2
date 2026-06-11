@@ -22,10 +22,6 @@ Post.init(
       allowNull: false,
       references: { model: 'users', key: 'id' },
     },
-    commentsEnabled: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true,
-    },
   },
   {
     sequelize,

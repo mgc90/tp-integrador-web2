@@ -93,15 +93,15 @@ export async function addComment(req, res) {
   const { postId, imageId } = req.params;
 
   try {
-    const post = await Post.findByPk(postId, {
-      attributes: ['id', 'commentsEnabled']
+    const image = await Image.findByPk(imageId, {
+      attributes: ['id', 'postId', 'commentsEnabled'],
     });
 
-    if (!post) {
+    if (!image || Number(image.postId) !== Number(postId)) {
       return res.status(404).redirect('/');
     }
 
-    if (!post.commentsEnabled) {
+    if (!image.commentsEnabled) {
       return res.redirect('/posts/' + postId);
     }
 
@@ -149,30 +149,38 @@ export async function rateImage(req, res) {
 }
 
 export async function closeComments(req, res) {
+  const { postId, imageId } = req.params;
   try {
-    const post = await Post.findByPk(req.params.postId);
+    const post = await Post.findByPk(postId, { attributes: ['id', 'userId'] });
     if (!post) return res.status(404).redirect('/');
     if (!req.session.user || req.session.user.id !== post.userId)
-      return res.status(403).redirect('/posts/' + post.id);
-    await post.update({ commentsEnabled: false });
-    res.redirect('/posts/' + post.id);
+      return res.status(403).redirect('/posts/' + postId);
+    const image = await Image.findByPk(imageId, { attributes: ['id', 'postId'] });
+    if (!image || Number(image.postId) !== Number(postId))
+      return res.status(404).redirect('/posts/' + postId);
+    await image.update({ commentsEnabled: false });
+    res.redirect('/posts/' + postId);
   } catch (error) {
     console.error('[!] Error al cerrar comentarios:', error);
-    res.redirect('/posts/' + post.id);
+    res.redirect('/posts/' + postId);
   }
 }
 
 export async function openComments(req, res) {
+  const { postId, imageId } = req.params;
   try {
-    const post = await Post.findByPk(req.params.postId);
+    const post = await Post.findByPk(postId, { attributes: ['id', 'userId'] });
     if (!post) return res.status(404).redirect('/');
     if (!req.session.user || req.session.user.id !== post.userId)
-      return res.status(403).redirect('/posts/' + post.id);
-    await post.update({ commentsEnabled: true });
-    res.redirect('/posts/' + post.id);
+      return res.status(403).redirect('/posts/' + postId);
+    const image = await Image.findByPk(imageId, { attributes: ['id', 'postId'] });
+    if (!image || Number(image.postId) !== Number(postId))
+      return res.status(404).redirect('/posts/' + postId);
+    await image.update({ commentsEnabled: true });
+    res.redirect('/posts/' + postId);
   } catch (error) {
     console.error('[!] Error al abrir comentarios:', error);
-    res.redirect('/posts/' + post.id);
+    res.redirect('/posts/' + postId);
   }
 }
 

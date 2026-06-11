@@ -69,9 +69,9 @@ block content
                     button(type='submit', name='value', value=val,
                       class="text-zinc-500 hover:text-yellow-400 text-lg cursor-pointer transition-colors") ☆
 
-          if !post.commentsEnabled
+          if !image.commentsEnabled
             div(class="bg-yellow-900/50 border border-yellow-700 text-yellow-300 rounded-lg p-3 mb-6 text-sm")
-              | El autor cerró los comentarios para esta publicación.
+              | El autor cerró los comentarios para esta imagen.
           
           div(class="flex items-center justify-between m-1")
             div(class="flex items-center gap-2")
@@ -93,11 +93,11 @@ block content
               span(class="text-xs text-zinc-500") #{image.activeInterestCount} interesado(s)
 
           if currentUser && post.User && currentUser.id === post.User.id
-            if post.commentsEnabled
-              form(method='POST', action='/posts/' + post.id + '/close-comments', class="")
+            if image.commentsEnabled
+              form(method='POST', action='/posts/' + post.id + '/images/' + image.id + '/close-comments', class="")
                 button(type='submit', class="text-xs text-red-400 hover:text-red-300 cursor-pointer transition-colors m-2") Cerrar comentarios
             else
-              form(method='POST', action='/posts/' + post.id + '/open-comments', class="")
+              form(method='POST', action='/posts/' + post.id + '/images/' + image.id + '/open-comments', class="")
                 button(type='submit', class="text-xs text-green-400 hover:text-green-300 cursor-pointer transition-colors m-2") Abrir comentarios
 
           if image.Comments && image.Comments.length
@@ -107,7 +107,7 @@ block content
           else
             p(class="text-zinc-500 text-sm m-2") Sin comentarios aún.
 
-          if currentUser && post.commentsEnabled
+          if currentUser && image.commentsEnabled
             form(method='POST', action='/posts/' + post.id + '/images/' + image.id + '/comments', class="flex gap-2")
               input(type='text', name='content', required, placeholder='Escribí un comentario...',
                 class="flex-1 px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-500")

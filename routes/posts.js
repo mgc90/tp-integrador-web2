@@ -40,7 +40,7 @@ posts.get('/:postId', detail);
 posts.post('/:postId/images/:imageId/comments', authMiddleware, addComment);
 posts.post('/:postId/images/:imageId/rate', authMiddleware, rateImage);
 posts.post('/:postId/images/:imageId/interest', authMiddleware, toggleInterest);
-posts.post('/:postId/close-comments', authMiddleware, closeComments);
-posts.post('/:postId/open-comments', authMiddleware, openComments);
+posts.post('/:postId/images/:imageId/close-comments', authMiddleware, closeComments);
+posts.post('/:postId/images/:imageId/open-comments', authMiddleware, openComments);
 
 export default posts;
