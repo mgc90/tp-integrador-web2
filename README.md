@@ -190,3 +190,12 @@ CLOUDINARY_API_SECRET=tu_api_secret
 2. En Render crear Web Service. Build Command: `npm install`, Start Command: `npm start`
 3. Agregar variables de entorno en Render (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, SESSION_SECRET, Cloudinary vars)
 4. En el dashboard de Render, ejecutar una sesión de shell y correr `npm run db:seed` para la primera población de datos
+
+
+## Usuario de prueba
+mail: pepitocatalan@algo.com  
+pass: 123456
+
+## Link del deploy
+https://fotaza-l60i.onrender.com   <-- deploy de rama prod
+
