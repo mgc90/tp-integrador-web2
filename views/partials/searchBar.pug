@@ -5,7 +5,7 @@ form(action="/search", method="GET", class="flex items-center gap-2")
     required,
     placeholder="Busca por título, etiqueta o usuario",
     value= (currentPath === '/search' && searchQuery ? searchQuery : ''),
-    class="bg-zinc-800 text-zinc-200 px-4 py-2 rounded-lg border border-zinc-600 focus:outline-none focus:border-red-500 w-80"
+    class="bg-zinc-800 text-zinc-200 px-4 py-2 rounded-lg border border-zinc-600 focus:outline-none focus:border-red-500 max-w-80"
   )
   each filter in (searchFilters || [])
     input(type="hidden", name="filter", value=filter)
