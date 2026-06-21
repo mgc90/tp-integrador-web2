@@ -7,7 +7,7 @@ mixin item(path, name, active)
 
 mixin nav
   nav(class="bg-zinc-900 border-b border-zinc-700 px-6 py-3")
-    div(class="flex items-center justify-between")
+    div(class="flex-wrap flex max-h-40 items-center justify-between")
       ul(class="flex items-center gap-6 ")
         li: a(href='/' class='text-red-600 text-4xl font-medium transition-colors') Fotaza
       include ../partials/searchBar
