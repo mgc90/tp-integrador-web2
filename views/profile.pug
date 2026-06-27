@@ -1,4 +1,6 @@
 extends layout.pug
+include mixins/watermarkEditor
+include mixins/feed
 
 block metadata
   title= user.firstName + ' ' + user.lastName + ' - Perfil - Fotaza'
@@ -13,8 +15,24 @@ block content
           class="w-32 h-32 rounded-full object-cover border-4 border-zinc-600"
         )
         h1(class="text-2xl text-white font-semibold mt-4")= user.firstName + ' ' + user.lastName
-        p(class="text-zinc-400 mt-1")= user.email
+        if isOwnProfile
+          p(class="text-zinc-400 mt-1")= user.email
         div(class="flex items-center gap-3 mt-3 text-zinc-400 text-sm")
           span= followersCount + ' seguidores'
           span ·
           span= followingCount + ' seguidos'
+        if !isOwnProfile && currentUser
+          div(class="mt-4")
+            form(method='POST', action='/users/' + user.id + '/follow')
+              input(type='hidden', name='redirect', value=currentPath)
+              if isFollowing
+                button(class="bg-zinc-700 text-red-400 px-4 py-2 rounded-lg text-sm cursor-pointer transition-colors") Siguiendo
+              else
+                button(class="bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-4 py-2 rounded-lg text-sm cursor-pointer transition-colors") Seguir
+      if isOwnProfile
+        +watermarkEditor(user)
+
+  if posts && posts.length
+    div(class="max-w-7xl mx-auto px-4 mt-8")
+      h2(class="text-white text-xl font-semibold mb-4") Publicaciones
+      +feed(posts)

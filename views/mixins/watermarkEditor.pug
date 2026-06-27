@@ -1,0 +1,50 @@
+mixin watermarkEditor(user)
+  div(class="border border-zinc-700 rounded-lg p-4 mt-6")
+    h3(class="text-white font-medium mb-3") Marca de agua
+    p(class="text-zinc-400 text-xs mb-3")
+      | Texto que se superpondrá a tus imágenes con copyright.
+      | Si no ingresás uno, se usará: 
+      em #{user.firstName} #{user.lastName} - Fotaza
+    form(method="POST", action="/profile/watermark", id="watermark-form")
+      div(class="flex gap-2")
+        input(
+          type="text",
+          name="watermarkText",
+          id="wm-input",
+          value=user.watermarkText || '',
+          placeholder=`${user.firstName} ${user.lastName} - Fotaza`,
+          disabled,
+          class="flex-1 px-3 py-2 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-500 disabled:opacity-60 focus:outline-none focus:border-red-500"
+        )
+        button(type="button", id="wm-edit",
+          class="bg-zinc-700 hover:bg-zinc-600 text-white px-4 py-2 rounded-lg text-sm cursor-pointer transition-colors") Editar
+        button(type="submit", id="wm-save", hidden,
+          class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm cursor-pointer transition-colors") Guardar
+        button(type="button", id="wm-cancel", hidden,
+          class="bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-4 py-2 rounded-lg text-sm cursor-pointer transition-colors") Cancelar
+
+  script.
+    (function() {
+      var input = document.getElementById('wm-input');
+      var editBtn = document.getElementById('wm-edit');
+      var saveBtn = document.getElementById('wm-save');
+      var cancelBtn = document.getElementById('wm-cancel');
+
+      if (!input || !editBtn || !saveBtn || !cancelBtn) return;
+
+      editBtn.onclick = function() {
+        input.disabled = false;
+        input.focus();
+        editBtn.hidden = true;
+        saveBtn.hidden = false;
+        cancelBtn.hidden = false;
+      };
+
+      cancelBtn.onclick = function() {
+        input.disabled = true;
+        input.value = input.defaultValue;
+        editBtn.hidden = false;
+        saveBtn.hidden = true;
+        cancelBtn.hidden = true;
+      };
+    })();

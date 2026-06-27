@@ -17,6 +17,7 @@ const userRows = [
     "email": "matigc90@gmail.com",
     "avatar": null,
     "watermarkText": null,
+    "rol": "admin",
     "password": "$2b$10$ohG1lnnLhyHjCZXFT5xUeuqTrOR4YJYxIrvd0rXxIoUlJfHa5w4bO",
     "createdAt": "2026-06-09T03:25:42.090Z",
     "updatedAt": "2026-06-09T03:25:42.090Z"
@@ -28,6 +29,7 @@ const userRows = [
     "email": "pepitocatalan@algo.com",
     "avatar": null,
     "watermarkText": null,
+    "rol": "user",
     "password": "$2b$10$TChwhv3s6a0T7644ccHN/OrEOPUFl6AClz.3KX/Eoh.b2LpOQyDtS",
     "createdAt": "2026-06-09T04:31:21.012Z",
     "updatedAt": "2026-06-09T04:31:21.012Z"
@@ -39,6 +41,7 @@ const userRows = [
     "email": "omarbakistata@algo.com",
     "avatar": null,
     "watermarkText": null,
+    "rol": "validator",
     "password": "$2b$10$17/9DT/ys/Hz8FpUGJTh1O7C27dFNCIaQv34RC1hlKHE9C7fdnIVe",
     "createdAt": "2026-06-09T05:21:21.913Z",
     "updatedAt": "2026-06-09T05:21:21.913Z"
@@ -50,6 +53,7 @@ const userRows = [
     "email": "rondamon@algo.com",
     "avatar": null,
     "watermarkText": null,
+    "rol": "user",
     "password": "$2b$10$vlCCgygOjtxZXytYE/c40.5s8KLclSTyy/IBmf7dTNRM9KMIrQvQa",
     "createdAt": "2026-06-09T06:18:24.531Z",
     "updatedAt": "2026-06-09T06:18:24.531Z"
@@ -61,6 +65,7 @@ const userRows = [
     "email": "gokusayayin@algo.com",
     "avatar": null,
     "watermarkText": null,
+    "rol": "user",
     "password": "$2b$10$EaG3zituP4eCyJeR.VUn4ey8g5aISGKH4mDp6QYsyUEfCBdF1Vyhi",
     "createdAt": "2026-06-09T14:18:18.215Z",
     "updatedAt": "2026-06-09T14:18:18.215Z"
@@ -72,6 +77,7 @@ const userRows = [
     "email": "carlosbilardo@algo.com",
     "avatar": "/imgs/defaultUser.jpg",
     "watermarkText": null,
+    "rol": "user",
     "password": "$2b$10$AmAbQqHoNt7zrL5QHG6rNOayKYmX9QEP7YUUILFLR9r53BNzHuC9S",
     "createdAt": "2026-06-11T03:17:02.213Z",
     "updatedAt": "2026-06-11T03:17:02.213Z"

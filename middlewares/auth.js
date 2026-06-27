@@ -1,7 +1,7 @@
 import { User } from "../models/User.js";
 
 export async function authMiddleware(req, res, next) {
-  const user = req.session.user; // usuario de la sesion solo contiene id
+  const user = req.session.user;
   if(!user) {
     res.redirect('/auth/login');
     return;
@@ -11,10 +11,10 @@ export async function authMiddleware(req, res, next) {
 
   try {
     const user = await User.findByPk(userId, {
-      attributes: ['id', 'firstName', 'lastName'],
+      attributes: ['id', 'firstName', 'lastName', 'rol', 'isActive'],
     });
 
-    if (!user) {
+    if (!user || !user.isActive) {
       res.redirect('/auth/login');
       return;
     }
@@ -23,7 +23,7 @@ export async function authMiddleware(req, res, next) {
       id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
-      rol: 'admin'
+      rol: user.rol,
     };
   } catch (error) {
     console.error('[!] Error al autenticar usuario:', error);
@@ -37,7 +37,7 @@ export async function loadCurrentUser(req, res, next) {
 
   try {
     const user = await User.findByPk(req.session.user.id, {
-      attributes: ['id', 'firstName', 'lastName'],
+      attributes: ['id', 'firstName', 'lastName', 'rol'],
     });
 
     if (user) {
@@ -45,6 +45,7 @@ export async function loadCurrentUser(req, res, next) {
         id: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
+        rol: user.rol,
       };
     }
   } catch (error) {

@@ -12,7 +12,8 @@
     "db:seed": "node seeders/seed.js",
     "db:export-seed": "node scripts/exportSeed.js",
     "db:clear": "node scripts/clearDb.js",
-    "db:migrate-uploads": "node scripts/migrateUploads.js"
+    "db:migrate-uploads": "node scripts/migrateUploads.js",
+    "db:backfill-thumbnails": "node scripts/backfillThumbnails.js"
   },
   "type": "module",
   "repository": {

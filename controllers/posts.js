@@ -88,6 +88,28 @@ export async function detail(req, res) {
   }
 }
 
+export async function deleteComment(req, res) {
+  const { postId, imageId, commentId } = req.params;
+
+  try {
+    const post = await Post.findByPk(postId, { attributes: ['id', 'userId'] });
+    if (!post) return res.status(404).redirect('/');
+    if (req.session.user.id !== post.userId) return res.status(403).redirect('/posts/' + postId);
+
+    const comment = await Comment.findOne({
+      where: { id: commentId, imageId },
+      attributes: ['id'],
+    });
+    if (!comment) return res.status(404).redirect('/posts/' + postId);
+
+    await comment.destroy();
+    res.redirect('/posts/' + postId);
+  } catch (error) {
+    console.error('[!] Error al borrar comentario:', error);
+    res.redirect('/posts/' + postId);
+  }
+}
+
 export async function addComment(req, res) {
   const { postId, imageId } = req.params;
 
@@ -232,6 +254,11 @@ export async function create(req, res) {
     });
   }
 
+  const user = await User.findByPk(req.session.user.id, {
+    attributes: ['firstName', 'lastName', 'watermarkText'],
+  });
+  const watermarkText = user.watermarkText || `${user.firstName} ${user.lastName} - Fotaza`;
+
   const images = [];
   for (let i = 1; i <= 3; i++) {
     const file = req.files ? req.files['image' + i] : undefined;
@@ -242,20 +269,55 @@ export async function create(req, res) {
       const metadata = await sharp(buffer).metadata();
       const size = Math.min(metadata.width, metadata.height);
 
-      const processedBuffer = await sharp(buffer)
-        .resize(size, size, { fit: 'cover', position: 'center' })
+      let pipeline = sharp(buffer)
+        .resize(size, size, { fit: 'cover', position: 'center' });
+
+      if (license === 'copyright') {
+        const svg = `
+<svg width="${size}" height="${size}">
+  <text x="50%" y="50%" text-anchor="middle"
+        dominant-baseline="central"
+        fill="rgba(255,255,255,0.35)"
+        font-size="${Math.max(20, Math.floor(size / 22))}"
+        font-family="Arial" font-weight="bold"
+        transform="rotate(-30, ${size / 2}, ${size / 2})">
+    ${watermarkText}
+  </text>
+</svg>`;
+        pipeline = pipeline.composite([{ input: Buffer.from(svg), top: 0, left: 0 }]);
+      }
+
+      const processedBuffer = await pipeline
         .jpeg({ quality: 80 })
         .toBuffer();
 
-      const result = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: 'fotaza' },
-          (error, result) => error ? reject(error) : resolve(result)
-        );
-        stream.end(processedBuffer);
-      });
+      const thumbBuffer = await sharp(processedBuffer)
+        .resize(200, 200)
+        .jpeg({ quality: 70 })
+        .toBuffer();
 
-      images.push({ url: result.secure_url, license: license || 'no-copyright' });
+      const [result, thumbResult] = await Promise.all([
+        new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'fotaza' },
+            (error, result) => error ? reject(error) : resolve(result)
+          );
+          stream.end(processedBuffer);
+        }),
+        new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'fotaza/thumbnails' },
+            (error, result) => error ? reject(error) : resolve(result)
+          );
+          stream.end(thumbBuffer);
+        }),
+      ]);
+
+      images.push({
+        url: result.secure_url,
+        thumbnailUrl: thumbResult.secure_url,
+        license: license || 'no-copyright',
+      });
     }
   }
 
@@ -286,6 +348,7 @@ export async function create(req, res) {
       await Image.create({
         postId: post.id,
         url: img.url,
+        thumbnailUrl: img.thumbnailUrl,
         license: img.license,
       });
     }

@@ -6,16 +6,18 @@ mixin item(path, name, active)
       a(href=path class='text-zinc-300 hover:text-red-400 transition-colors') #{name}
 
 mixin nav
-  nav(class="bg-zinc-900 border-b border-zinc-700 px-6 py-3")
+  nav(class="bg-zinc-900 border-b border-zinc-700 px-6 ")
     div(class="flex-wrap flex max-h-40 items-center justify-between")
-      ul(class="flex items-center gap-6 ")
+      ul(class="flex items-center  py-3 ")
         li: a(href='/' class='text-red-600 text-4xl font-medium transition-colors') Fotaza
       include ../partials/searchBar
-      div(class="flex items-center gap-6 list-none")
+      div(class="flex items-center gap-3 py-2 list-none")
         +item('/feed', 'Explorar', currentPath == '/feed')
         if currentUser
           +item('/following', 'Siguiendo', currentPath == '/following')
-          +item('/posts/new', 'Nueva publicación', currentPath == '/posts/new')
+          +item('/posts/new', 'Publicar', currentPath == '/posts/new')
+          if currentUser.rol === 'validator' || currentUser.rol === 'admin'
+            +item('/validator', 'Validar', currentPath == '/validator')
           +item('/profile', currentUser.firstName, currentPath == '/profile')
           form(action="/auth/logout", method="post")   
             button(type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors") Salir

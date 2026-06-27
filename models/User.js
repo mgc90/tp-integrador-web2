@@ -39,6 +39,16 @@ User.init(
     watermarkText: {
       type: DataTypes.STRING,
     },
+    rol: {
+      type: DataTypes.ENUM('user', 'validator', 'admin'),
+      defaultValue: 'user',
+      allowNull: false,
+    },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      allowNull: false,
+    },
     password: {
       type: DataTypes.STRING,
     }
