@@ -22,6 +22,11 @@ Post.init(
       allowNull: false,
       references: { model: 'users', key: 'id' },
     },
+    status: {
+      type: DataTypes.ENUM('active', 'taken_down'),
+      defaultValue: 'active',
+      allowNull: false,
+    },
   },
   {
     sequelize,

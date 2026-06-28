@@ -84,7 +84,7 @@ export async function search(req, res) {
         { model: User, attributes: ['id', 'firstName', 'lastName'] },
         { model: Tag },
       ],
-      where: { [Op.or]: orConditions },
+      where: { [Op.or]: orConditions, status: 'active' },
       order,
       distinct: true,
     });

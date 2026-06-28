@@ -13,8 +13,11 @@ mixin commentCard(comment, postUserId, postId)
             button(class="text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-1.5 py-0.5 rounded cursor-pointer") Seguir
       span= comment.createdAt ? comment.createdAt.toLocaleDateString() : ''
     p(class="text-zinc-200 text-sm")= comment.content
-    if currentUser && currentUser.id === postUserId
-      div(class="flex justify-end gap-3 text-xs")
+    div(class="flex justify-end gap-3 text-xs")
+      if currentUser && currentUser.id === postUserId
         form(method='POST', action='/posts/' + postId + '/images/' + comment.imageId + '/comments/' + comment.id + '/delete',
           onsubmit="return confirm('¿Seguro que deseas borrar este comentario?')")
           button(type='submit', class="text-zinc-500 hover:text-red-400 transition-colors cursor-pointer") Borrar
+      if currentUser && currentUser.id !== comment.User.id && !comment.userHasReported
+        button(onclick="openReportModal('comment', " + comment.id + ")",
+          class="text-zinc-500 hover:text-yellow-400 transition-colors cursor-pointer") Denunciar

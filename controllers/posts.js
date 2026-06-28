@@ -8,6 +8,7 @@ import { Interest } from "../models/Interest.js";
 import { Follow } from "../models/Follow.js";
 import { Collection } from "../models/Collection.js";
 import { CollectionPost } from "../models/CollectionPost.js";
+import { Report } from "../models/Report.js";
 import { notify } from "./notifications.js";
 import sharp from 'sharp';
 import cloudinary from '../config/cloudinary.js';
@@ -36,6 +37,13 @@ export async function detail(req, res) {
       return res.status(404).render('index', {
         alert: { status: 'error', text: 'Publicación no encontrada' }
       });
+    }
+
+    const isAuthor = req.session.user && post.User && req.session.user.id === post.User.id;
+    const isValidator = req.session.user && (res.locals.currentUser?.rol === 'validator' || res.locals.currentUser?.rol === 'admin');
+
+    if (post.status === 'taken_down' && !isAuthor && !isValidator && !isAuthor) {
+      return res.render('posts/detail', { post, postTakenDown: true });
     }
 
     if (req.session.user && post.User && req.session.user.id !== post.User.id) {
@@ -100,6 +108,54 @@ export async function detail(req, res) {
           where: { collectionId: favCollection.id, postId: post.id },
         });
         isFavorited = !!cp;
+      }
+    }
+
+    const imageIds = post.images.map(i => i.id);
+    const commentIds = post.images.flatMap(i => (i.Comments || []).map(c => c.id));
+
+    let imageReports = [];
+    let commentReports = [];
+
+    if (req.session.user && imageIds.length) {
+      imageReports = await Report.findAll({
+        where: { imageId: imageIds, status: 'pending' },
+        attributes: ['imageId', 'userId'],
+      });
+    }
+
+    if (commentIds.length) {
+      commentReports = await Report.findAll({
+        where: { commentId: commentIds, status: 'pending' },
+        attributes: ['commentId', 'userId'],
+      });
+    }
+
+    if (req.session.user) {
+      const userId = req.session.user.id;
+      for (const image of post.images) {
+        const imgReps = imageReports.filter(r => r.imageId === image.id);
+        image.userHasReported = imgReps.some(r => r.userId === userId);
+        image.reportCount = new Set(imgReps.map(r => r.userId)).size;
+
+        for (const comment of (image.Comments || [])) {
+          const comReps = commentReports.filter(r => r.commentId === comment.id);
+          comment.userHasReported = comReps.some(r => r.userId === userId);
+          comment.reportCount = comReps.length;
+        }
+      }
+    }
+
+    if (isAuthor && commentIds.length) {
+      const fullCommentReports = await Report.findAll({
+        where: { commentId: commentIds, status: 'pending' },
+        include: [{ model: User, as: 'reporter', attributes: ['id', 'firstName', 'lastName'] }],
+        attributes: ['id', 'commentId', 'motivo', 'descripcion', 'createdAt'],
+      });
+      for (const image of post.images) {
+        for (const comment of (image.Comments || [])) {
+          comment.reports = fullCommentReports.filter(r => r.commentId === comment.id);
+        }
       }
     }
 
@@ -209,6 +265,15 @@ export async function rateImage(req, res) {
   }
 }
 
+async function hasPendingReports(postId) {
+  const imageIds = (await Image.findAll({ where: { postId }, attributes: ['id'] })).map(i => i.id);
+  if (!imageIds.length) return false;
+  const count = await Report.count({
+    where: { imageId: imageIds, status: 'pending' },
+  });
+  return count > 0;
+}
+
 export async function closeComments(req, res) {
   const { postId, imageId } = req.params;
   try {
@@ -216,6 +281,11 @@ export async function closeComments(req, res) {
     if (!post) return res.status(404).redirect('/');
     if (!req.session.user || req.session.user.id !== post.userId)
       return res.status(403).redirect('/posts/' + postId);
+
+    if (await hasPendingReports(postId)) {
+      return res.redirect('/posts/' + postId);
+    }
+
     const image = await Image.findByPk(imageId, { attributes: ['id', 'postId'] });
     if (!image || Number(image.postId) !== Number(postId))
       return res.status(404).redirect('/posts/' + postId);
@@ -234,6 +304,11 @@ export async function openComments(req, res) {
     if (!post) return res.status(404).redirect('/');
     if (!req.session.user || req.session.user.id !== post.userId)
       return res.status(403).redirect('/posts/' + postId);
+
+    if (await hasPendingReports(postId)) {
+      return res.redirect('/posts/' + postId);
+    }
+
     const image = await Image.findByPk(imageId, { attributes: ['id', 'postId'] });
     if (!image || Number(image.postId) !== Number(postId))
       return res.status(404).redirect('/posts/' + postId);

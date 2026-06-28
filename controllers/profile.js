@@ -63,7 +63,7 @@ export async function publicProfile(req, res) {
           { model: Image, as: 'images', attributes: ['id', 'url', 'thumbnailUrl', 'license'] },
           { model: User, attributes: ['id', 'firstName', 'lastName'] },
         ],
-        where: { userId: user.id },
+        where: { userId: user.id, status: 'active' },
         order: [['createdAt', 'DESC']],
       }),
     ]);
@@ -155,7 +155,7 @@ export async function following(req, res) {
           { model: Image, as: 'images', attributes: ['id', 'url', 'license'] },
           { model: User, attributes: ['id', 'firstName', 'lastName'] },
         ],
-        where: { userId: followedIds },
+        where: { userId: followedIds, status: 'active' },
         order,
       });
 

@@ -1,0 +1,77 @@
+mixin reportModal()
+  div(id="report-modal", class="fixed inset-0 z-50 hidden")
+    div(class="absolute inset-0 bg-black/60", onclick="closeReportModal()")
+    div(class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-zinc-800 rounded-xl border border-zinc-600 shadow-2xl p-6 w-80")
+      h3(class="text-white font-semibold mb-1") Denunciar contenido
+      p(class="text-zinc-500 text-xs mb-4") Seleccioná un motivo para la denuncia.
+      form(id="report-form", method="POST")
+        div(class="mb-4")
+          label(class="text-zinc-400 text-sm block mb-1") Motivo
+          select(name="motivo", id="report-motivo", required,
+            class="w-full bg-zinc-700 border border-zinc-600 rounded-lg text-white px-3 py-2 text-sm focus:outline-none focus:border-red-500")
+            option(value="") Seleccioná un motivo
+            option(value="Contenido inapropiado") Contenido inapropiado
+            option(value="Violación de copyright") Violación de copyright
+            option(value="Spam") Spam
+            option(value="Discurso de odio") Discurso de odio
+            option(value="Acoso") Acoso
+            option(value="Otro") Otro
+        div(id="report-otro-container", class="mb-4 hidden")
+          label(class="text-zinc-400 text-sm block mb-1") Especificá el motivo
+          input(type="text", id="report-otro-input", maxlength="30",
+            placeholder="Ej: Contenido engañoso...",
+            class="w-full bg-zinc-700 border border-zinc-600 rounded-lg text-white px-3 py-2 text-sm placeholder-zinc-500 focus:outline-none focus:border-red-500")
+        div(class="flex gap-2 justify-end")
+          button(type="button", onclick="closeReportModal()",
+            class="bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-4 py-2 rounded-lg text-sm cursor-pointer transition-colors") Cancelar
+          button(type="submit",
+            class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm cursor-pointer transition-colors") Enviar denuncia
+
+  script.
+    (function() {
+      var modal = document.getElementById('report-modal');
+      var form = document.getElementById('report-form');
+      var motivo = document.getElementById('report-motivo');
+      var otroContainer = document.getElementById('report-otro-container');
+      var otroInput = document.getElementById('report-otro-input');
+
+      window.openReportModal = function(type, id) {
+        form.action = '/reports/' + type + 's/' + id;
+        motivo.value = '';
+        otroContainer.classList.add('hidden');
+        otroInput.value = '';
+        modal.classList.remove('hidden');
+      };
+
+      window.closeReportModal = function() {
+        modal.classList.add('hidden');
+      };
+
+      if (motivo) {
+        motivo.onchange = function() {
+          if (motivo.value === 'Otro') {
+            otroContainer.classList.remove('hidden');
+            otroInput.focus();
+          } else {
+            otroContainer.classList.add('hidden');
+            otroInput.value = '';
+          }
+        };
+      }
+
+      if (form) {
+        form.onsubmit = function() {
+          if (motivo.value === 'Otro') {
+            if (!otroInput.value.trim()) {
+              alert('Por favor, especificá el motivo personalizado.');
+              otroInput.focus();
+              return false;
+            }
+            motivo.value = otroInput.value.trim();
+          } else if (!motivo.value) {
+            alert('Seleccioná un motivo.');
+            return false;
+          }
+        };
+      }
+    })();

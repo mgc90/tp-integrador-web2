@@ -94,17 +94,17 @@ export async function addPost(req, res) {
     });
 
     if (!collection) {
-      return res.status(404).redirect('back');
+      return res.status(404).redirect('/posts/' + req.params.postId);
     }
 
     await CollectionPost.findOrCreate({
       where: { collectionId: collection.id, postId: req.params.postId },
     });
 
-    res.redirect('back');
+    res.redirect('/posts/' + req.params.postId);
   } catch (error) {
     console.error('[!] Error al agregar post a colección:', error);
-    res.redirect('back');
+    res.redirect('/posts/' + req.params.postId);
   }
 }
 
@@ -115,17 +115,17 @@ export async function removePost(req, res) {
     });
 
     if (!collection) {
-      return res.status(404).redirect('back');
+      return res.status(404).redirect('/posts/' + req.params.postId);
     }
 
     await CollectionPost.destroy({
       where: { collectionId: collection.id, postId: req.params.postId },
     });
 
-    res.redirect('back');
+    res.redirect('/posts/' + req.params.postId);
   } catch (error) {
     console.error('[!] Error al remover post de colección:', error);
-    res.redirect('back');
+    res.redirect('/posts/' + req.params.postId);
   }
 }
 
@@ -176,9 +176,9 @@ export async function toggleFavorite(req, res) {
       await CollectionPost.create({ collectionId: favCollection.id, postId });
     }
 
-    res.redirect('back');
+    res.redirect('/posts/' + postId);
   } catch (error) {
     console.error('[!] Error al togglear favorito:', error);
-    res.redirect('back');
+    res.redirect('/posts/' + postId);
   }
 }

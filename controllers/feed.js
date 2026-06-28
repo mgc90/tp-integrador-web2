@@ -47,6 +47,7 @@ export async function feed(req, res) {
         { model: Image, as: 'images', attributes: ['id', 'url', 'license'] },
         { model: User, attributes: ['id', 'firstName', 'lastName'] },
       ],
+      where: { status: 'active' },
       order,
     });
 

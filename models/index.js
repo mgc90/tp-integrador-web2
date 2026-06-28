@@ -10,6 +10,7 @@ import { Follow } from './Follow.js';
 import { Collection } from './Collection.js';
 import { CollectionPost } from './CollectionPost.js';
 import { Notification } from './Notification.js';
+import { Report } from './Report.js';
 
 export function initializeAssociations() {
   User.hasMany(Post, { foreignKey: 'userId' });
@@ -77,6 +78,14 @@ export function initializeAssociations() {
   Post.hasMany(Notification, { foreignKey: 'postId' });
   Notification.belongsTo(Image, { foreignKey: 'imageId' });
   Image.hasMany(Notification, { foreignKey: 'imageId' });
+
+  Report.belongsTo(Image, { foreignKey: 'imageId' });
+  Image.hasMany(Report, { foreignKey: 'imageId' });
+  Report.belongsTo(Comment, { foreignKey: 'commentId' });
+  Comment.hasMany(Report, { foreignKey: 'commentId' });
+  Report.belongsTo(User, { foreignKey: 'userId', as: 'reporter' });
+  User.hasMany(Report, { foreignKey: 'userId', as: 'reports' });
+  Report.belongsTo(User, { foreignKey: 'resolvedBy', as: 'resolver' });
 }
 
 export async function connectDatabase() {
@@ -84,7 +93,7 @@ export async function connectDatabase() {
     initializeAssociations();
     await sequelize.authenticate();
     console.log('[+] Conexion a bd establecida')
-    await sequelize.sync({ alter: false }); // CAMBIAR POR FALSE EN PRODUCCIÓN PARA 
+    await sequelize.sync({ alter: true }); // CAMBIAR POR FALSE EN PRODUCCIÓN PARA 
     // EVITAR BORRADO ACCIDENTAL DE COLUMNAS PARA CREAR SÓLO TABLAS QUE NO EXISTEN
     console.log('[+] Sincronizado de modelos')
  

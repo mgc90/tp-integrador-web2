@@ -9,6 +9,8 @@ import profileRouter from './routes/profile.js';
 import followingRouter from './routes/following.js';
 import collectionsRouter from './routes/collections.js';
 import notificationsRouter from './routes/notifications.js';
+import reportsRouter from './routes/reports.js';
+import validatorRouter from './routes/validator.js';
 import { loadCurrentUser } from './middlewares/auth.js';
 import session from 'express-session';
 
@@ -62,6 +64,8 @@ app.use('/profile', profileRouter);
 app.use('/following', followingRouter);
 app.use('/collections', collectionsRouter);
 app.use('/notifications', notificationsRouter);
+app.use('/reports', reportsRouter);
+app.use('/validator', validatorRouter);
 
 
 // CONEXION A BD

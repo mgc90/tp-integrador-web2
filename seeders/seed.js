@@ -8,6 +8,8 @@ import { Comment } from '../models/Comment.js';
 import { Valoration } from '../models/Valoration.js';
 import { Interest } from '../models/Interest.js';
 import { Follow } from '../models/Follow.js';
+import { Collection } from '../models/Collection.js';
+import { CollectionPost } from '../models/CollectionPost.js';
 
 const userRows = [
   {
@@ -1343,6 +1345,10 @@ async function seed() {
       followerId: userIdMap[rest.followerId],
       followedId: userIdMap[rest.followedId],
     })));
+  }
+
+  for (const userId of Object.values(userIdMap)) {
+    await Collection.create({ userId, name: 'Favoritos', isDefault: true });
   }
 
   console.log('[+] Seed completado.');
