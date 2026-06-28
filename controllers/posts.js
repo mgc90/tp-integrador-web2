@@ -8,6 +8,8 @@ import { Interest } from "../models/Interest.js";
 import { Follow } from "../models/Follow.js";
 import sharp from 'sharp';
 import cloudinary from '../config/cloudinary.js';
+import { createPostSchema } from "../validators/post.js";
+import { createCommentSchema } from "../validators/comment.js";
 
 export async function detail(req, res) {
   try {
@@ -113,6 +115,11 @@ export async function deleteComment(req, res) {
 export async function addComment(req, res) {
   const { postId, imageId } = req.params;
 
+  const result = createCommentSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.redirect('/posts/' + postId);
+  }
+
   try {
     const image = await Image.findByPk(imageId, {
       attributes: ['id', 'postId', 'commentsEnabled'],
@@ -126,15 +133,10 @@ export async function addComment(req, res) {
       return res.redirect('/posts/' + postId);
     }
 
-    const content = req.body.content && req.body.content.trim();
-    if (!content) {
-      return res.redirect('/posts/' + postId);
-    }
-
     await Comment.create({
       imageId: Number(imageId),
       userId: req.session.user.id,
-      content,
+      content: result.data.content,
     });
 
     res.redirect('/posts/' + postId);
@@ -235,28 +237,19 @@ export async function createForm(req, res) {
 }
 
 export async function create(req, res) {
-  const { title, description, tags, license1, license2, license3 } = req.body;
+  const result = createPostSchema.safeParse(req.body);
 
-  const name = title.trim();
-  const descr = description ? description.trim() : '';
-
-  if (!name) {
-    return res.status(400).render('posts/new', {
-      alert: { status: 'error', text: 'El título es obligatorio' },
-      formValues: req.body,
-    });
+  if (!result.success) {
+    const errors = result.error.flatten().fieldErrors;
+    return res.status(400).render('posts/new', { errors, formValues: req.body });
   }
 
-  if (!tags || !tags.trim()) {
-    return res.status(400).render('posts/new', {
-      alert: { status: 'error', text: 'Al menos una etiqueta es obligatoria' },
-      formValues: req.body,
-    });
-  }
+  const { title, description, tags } = result.data;
 
   const user = await User.findByPk(req.session.user.id, {
     attributes: ['firstName', 'lastName', 'watermarkText'],
   });
+  
   const watermarkText = user.watermarkText || `${user.firstName} ${user.lastName} - Fotaza`;
 
   const images = [];
@@ -274,16 +267,16 @@ export async function create(req, res) {
 
       if (license === 'copyright') {
         const svg = `
-<svg width="${size}" height="${size}">
-  <text x="50%" y="50%" text-anchor="middle"
-        dominant-baseline="central"
-        fill="rgba(255,255,255,0.35)"
-        font-size="${Math.max(20, Math.floor(size / 22))}"
-        font-family="Arial" font-weight="bold"
-        transform="rotate(-30, ${size / 2}, ${size / 2})">
-    ${watermarkText}
-  </text>
-</svg>`;
+          <svg width="${size}" height="${size}">
+            <text x="50%" y="50%" text-anchor="middle"
+                  dominant-baseline="central"
+                  fill="rgba(255,255,255,0.35)"
+                  font-size="${Math.max(20, Math.floor(size / 22))}"
+                  font-family="Arial" font-weight="bold"
+                  transform="rotate(-30, ${size / 2}, ${size / 2})">
+              ${watermarkText}
+            </text>
+          </svg>`;
         pipeline = pipeline.composite([{ input: Buffer.from(svg), top: 0, left: 0 }]);
       }
 
@@ -339,8 +332,8 @@ export async function create(req, res) {
 
   try {
     const post = await Post.create({
-      title: name,
-      description: descr,
+      title,
+      description: description || null,
       userId: req.session.user.id,
     });
 
