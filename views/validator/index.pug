@@ -17,15 +17,17 @@ block content
         h2(class="text-white text-xl font-medium mb-4") Publicaciones denunciadas (#{reportedPosts.length})
         div(class="space-y-4")
           each post in reportedPosts
-            - const rCount = reportCountMap[post.id] || 0
+            - const pStatus = reportStatusMap[post.id] || {}
+            - const pHasPending = pStatus.pending > 0
+            - const pTotal = pStatus.total || 0
             div(class="bg-zinc-800 rounded-lg border border-zinc-700 overflow-hidden")
               div(class="flex gap-4 p-4")
                 if post.images && post.images[0]
                   img(src=post.images[0].thumbnailUrl || post.images[0].url,
                       alt=post.title,
-                      class="w-24 h-24 object-cover rounded flex-shrink-0")
+                      class="w-24 h-24 object-cover rounded shrink-0")
                 else
-                  div(class="w-24 h-24 bg-zinc-900 rounded flex-shrink-0 flex items-center justify-center")
+                  div(class="w-24 h-24 bg-zinc-900 rounded shrink-0 flex items-center justify-center")
                     span(class="text-zinc-600 text-xs") Sin img
 
                 div(class="flex-1 min-w-0")
@@ -35,30 +37,36 @@ block content
                         a(href="/posts/" + post.id, class="hover:text-red-400 transition-colors")= post.title
                       if post.User
                         p(class="text-zinc-500 text-xs mt-0.5") por #{post.User.firstName} #{post.User.lastName}
-                    span(class="text-red-400 text-xs bg-red-900/30 px-2 py-1 rounded flex-shrink-0")
-                      = rCount + ' denuncia(s)'
+                    if pHasPending
+                      span(class="text-red-400 text-xs bg-red-900/30 px-2 py-1 rounded shrink-0") Pendiente
+                    else if pStatus.dismissed > 0
+                      span(class="text-yellow-400 text-xs bg-yellow-900/30 px-2 py-1 rounded shrink-0") Desestimada
+                    else
+                      span(class="text-green-200 text-xs bg-green-900/30 px-2 py-1 rounded shrink-0") Eliminada
 
-                  p(class="text-zinc-600 text-xs mt-2")
-                    = post.images ? post.images.length + ' imagen(es)' : '0 imagenes'
+                  p(class="text-zinc-600 text-xs mt-2") #{pTotal} denuncia(s)
 
-                  div(class="flex gap-2 mt-3")
-                    form(method="POST", action="/validator/posts/" + post.id + "/takedown",
-                      onsubmit="return confirm('Dar de baja esta publicación? El autor podría ser desactivado si acumula 3 bajas.')")
-                      button(type="submit",
-                        class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer")
-                        | Dar de baja
-                    form(method="POST", action="/validator/posts/" + post.id + "/dismiss",
-                      onsubmit="return confirm('Desestimar todas las denuncias de esta publicación?')")
-                      button(type="submit",
-                        class="bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer")
-                        | Desestimar
+                  if pHasPending
+                    div(class="flex gap-2 mt-3")
+                      form(method="POST", action="/validator/posts/" + post.id + "/takedown",
+                        onsubmit="return confirm('Dar de baja esta publicación? El autor podría ser desactivado si acumula 3 bajas.')")
+                        button(type="submit",
+                          class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer")
+                          | Dar de baja
+                      form(method="POST", action="/validator/posts/" + post.id + "/dismiss",
+                        onsubmit="return confirm('Desestimar todas las denuncias de esta publicación?')")
+                        button(type="submit",
+                          class="bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer")
+                          | Desestimar
 
     if reportedComments.length
       section
         h2(class="text-white text-xl font-medium mb-4") Comentarios denunciados (#{reportedComments.length})
         div(class="space-y-3")
           each comment in reportedComments
-            - const cCount = comment.get('reportCount') || 0
+            - const cStatus = commentStatusMap[comment.id] || {}
+            - const cHasPending = cStatus.pending > 0
+            - const cTotal = cStatus.total || 0
             div(class="bg-zinc-800 rounded-lg border border-zinc-700 p-4")
               div(class="flex items-start justify-between gap-4")
                 div(class="flex-1 min-w-0")
@@ -68,20 +76,26 @@ block content
                     span= comment.createdAt ? comment.createdAt.toLocaleDateString() : ''
                   p(class="text-zinc-200 text-sm")= comment.content
                   div(class="flex items-center gap-2 mt-2")
-                    span(class="text-red-400 text-xs bg-red-900/30 px-1.5 py-0.5 rounded")= cCount + ' denuncia(s)'
+                    if cHasPending
+                      span(class="text-red-400 text-xs bg-red-900/30 px-1.5 py-0.5 rounded") Pendiente (#{cTotal})
+                    else if cStatus.dismissed > 0
+                      span(class="text-yellow-400 text-xs bg-yellow-900/30 px-1.5 py-0.5 rounded") Desestimada (#{cTotal})
+                    else
+                      span(class="text-green-200 text-xs bg-green-900/30 px-1.5 py-0.5 rounded") Resuelta (#{cTotal})
                     if comment.Image
                       a(href="/posts/" + comment.Image.postId,
                         class="text-zinc-500 hover:text-zinc-300 text-xs transition-colors")
                         | Ir al post
 
-                div(class="flex gap-2 flex-shrink-0")
-                  form(method="POST", action="/validator/comments/" + comment.id + "/delete",
-                    onsubmit="return confirm('Eliminar este comentario?')")
-                    button(type="submit",
-                      class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer")
-                      | Eliminar
-                  form(method="POST", action="/validator/comments/" + comment.id + "/dismiss",
-                    onsubmit="return confirm('Desestimar denuncias de este comentario?')")
-                    button(type="submit",
-                      class="bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer")
-                      | Desestimar
+                if cHasPending
+                  div(class="flex gap-2 shrink-0")
+                    form(method="POST", action="/validator/comments/" + comment.id + "/delete",
+                      onsubmit="return confirm('Eliminar este comentario?')")
+                      button(type="submit",
+                        class="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer")
+                        | Eliminar
+                    form(method="POST", action="/validator/comments/" + comment.id + "/dismiss",
+                      onsubmit="return confirm('Desestimar denuncias de este comentario?')")
+                      button(type="submit",
+                        class="bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-xs px-3 py-1.5 rounded-lg transition-colors cursor-pointer")
+                        | Desestimar

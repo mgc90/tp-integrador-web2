@@ -11,6 +11,7 @@ import { Collection } from './Collection.js';
 import { CollectionPost } from './CollectionPost.js';
 import { Notification } from './Notification.js';
 import { Report } from './Report.js';
+import { Message } from './Message.js';
 
 export function initializeAssociations() {
   User.hasMany(Post, { foreignKey: 'userId' });
@@ -86,6 +87,11 @@ export function initializeAssociations() {
   Report.belongsTo(User, { foreignKey: 'userId', as: 'reporter' });
   User.hasMany(Report, { foreignKey: 'userId', as: 'reports' });
   Report.belongsTo(User, { foreignKey: 'resolvedBy', as: 'resolver' });
+
+  Message.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
+  Message.belongsTo(User, { foreignKey: 'receiverId', as: 'receiver' });
+  User.hasMany(Message, { foreignKey: 'senderId', as: 'sentMessages' });
+  User.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
 }
 
 export async function connectDatabase() {

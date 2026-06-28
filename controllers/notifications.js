@@ -37,10 +37,10 @@ export async function markAsRead(req, res) {
         where: { id: req.params.id, userId: req.session.user.id },
       }
     );
-    res.redirect('back');
+    res.redirect('/notifications');
   } catch (error) {
     console.error('[!] Error al marcar notificación:', error);
-    res.redirect('back');
+    res.redirect('/notifications');
   }
 }
 
@@ -52,9 +52,9 @@ export async function markAllAsRead(req, res) {
         where: { userId: req.session.user.id, read: false },
       }
     );
-    res.redirect('back');
+    res.redirect('/notifications');
   } catch (error) {
     console.error('[!] Error al marcar notificaciones:', error);
-    res.redirect('back');
+    res.redirect('/notifications');
   }
 }

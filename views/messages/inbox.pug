@@ -1,0 +1,28 @@
+extends ../layout.pug
+
+block metadata
+  title Mensajes - Fotaza
+
+block content
+  div(class="max-w-3xl mx-auto p-6")
+    h1(class="text-white text-3xl font-semibold mb-8") Mensajes
+
+    if conversations && conversations.length
+      div(class="space-y-2")
+        each conv in conversations
+          a(href="/messages/" + conv.partner.id, class="block")
+            div(class="bg-zinc-800 border border-zinc-700 rounded-lg p-4 hover:border-zinc-500 transition-colors")
+              div(class="flex items-start justify-between gap-4")
+                div(class="flex-1 min-w-0")
+                  div(class="flex items-center gap-2")
+                    span(class="text-white font-medium")= conv.partner.firstName + ' ' + conv.partner.lastName
+                    if conv.unreadCount > 0
+                      span(class="bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full")= conv.unreadCount
+                  if conv.lastMessage
+                    p(class="text-zinc-400 text-sm truncate mt-1")= conv.lastMessage.content
+                if conv.lastMessage
+                  span(class="text-zinc-600 text-xs flex-shrink-0")= conv.lastMessage.createdAt.toLocaleDateString()
+    else
+      div(class="text-center py-16")
+        p(class="text-zinc-500 text-lg") No tenés conversaciones aún.
+        p(class="text-zinc-600 text-sm mt-2") Cuando alguien muestre interés en tu contenido o inicies una conversación, aparecerá acá.

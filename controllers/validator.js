@@ -8,15 +8,23 @@ import sequelize from '../models/config.js';
 export async function dashboard(req, res) {
   try {
     const [postRows] = await sequelize.query(`
-      SELECT i."postId", COUNT(DISTINCT r."userId") AS "reportCount"
+      SELECT i."postId", r."status", COUNT(DISTINCT r."userId") AS "userCount"
       FROM "reports" r
       JOIN "images" i ON i."id" = r."imageId"
-      WHERE r."status" = 'pending'
-      GROUP BY i."postId"
+      GROUP BY i."postId", r."status"
       HAVING COUNT(DISTINCT r."userId") >= 3
     `);
 
-    const postIds = postRows.map(r => r.postId);
+    const reportStatusMap = {};
+    const postIds = [];
+    for (const r of postRows) {
+      if (!reportStatusMap[r.postId]) {
+        reportStatusMap[r.postId] = { pending: 0, dismissed: 0, resolved: 0, total: 0 };
+        postIds.push(r.postId);
+      }
+      reportStatusMap[r.postId][r.status] = Number(r.userCount);
+      reportStatusMap[r.postId].total += Number(r.userCount);
+    }
 
     const reportedPosts = postIds.length
       ? await Post.findAll({
@@ -28,39 +36,48 @@ export async function dashboard(req, res) {
         })
       : [];
 
-    const reportCountMap = {};
-    for (const r of postRows) {
-      reportCountMap[r.postId] = r.reportCount;
+    const [commentRows] = await sequelize.query(`
+      SELECT r."commentId", r."status", COUNT(DISTINCT r."userId") AS "userCount"
+      FROM "reports" r
+      WHERE r."commentId" IS NOT NULL
+      GROUP BY r."commentId", r."status"
+    `);
+
+    const commentStatusMap = {};
+    const commentIds = [];
+    for (const r of commentRows) {
+      if (!commentStatusMap[r.commentId]) {
+        commentStatusMap[r.commentId] = { pending: 0, dismissed: 0, resolved: 0, total: 0 };
+        commentIds.push(r.commentId);
+      }
+      commentStatusMap[r.commentId][r.status] = Number(r.userCount);
+      commentStatusMap[r.commentId].total += Number(r.userCount);
     }
 
-    const reportedComments = await Comment.findAll({
-      include: [
-        { model: Report, where: { status: 'pending' }, required: true },
-        { model: User, attributes: ['id', 'firstName', 'lastName'] },
-        { model: Image, attributes: ['id', 'postId'] },
-      ],
-      attributes: [
-        'id', 'imageId', 'userId', 'content', 'createdAt',
-        [sequelize.literal(`(
-          SELECT COUNT(DISTINCT r2."userId")
-          FROM "reports" r2
-          WHERE r2."commentId" = "Comment"."id" AND r2."status" = 'pending'
-        )`), 'reportCount'],
-      ],
-      group: ['Comment.id', 'Comment.imageId', 'Comment.userId', 'Comment.content', 'Comment.createdAt', 'User.id', 'User.firstName', 'User.lastName', 'Image.id', 'Image.postId', 'Reports.id'],
-    });
+    const reportedComments = commentIds.length
+      ? await Comment.findAll({
+          where: { id: commentIds },
+          include: [
+            { model: User, attributes: ['id', 'firstName', 'lastName'] },
+            { model: Image, attributes: ['id', 'postId'] },
+          ],
+          attributes: ['id', 'imageId', 'userId', 'content', 'createdAt'],
+        })
+      : [];
 
     res.render('validator/index', {
       reportedPosts,
       reportedComments,
-      reportCountMap,
+      reportStatusMap,
+      commentStatusMap,
     });
   } catch (error) {
     console.error('[!] Error en panel validador:', error);
     res.status(500).render('validator/index', {
       reportedPosts: [],
       reportedComments: [],
-      reportCountMap: {},
+      reportStatusMap: {},
+      commentStatusMap: {},
       alert: { status: 'error', text: 'Error al cargar el panel' },
     });
   }

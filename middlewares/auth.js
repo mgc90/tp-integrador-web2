@@ -1,5 +1,6 @@
 import { User } from "../models/User.js";
 import { Notification } from "../models/Notification.js";
+import { Message } from "../models/Message.js";
 
 export async function authMiddleware(req, res, next) {
   const user = req.session.user;
@@ -31,6 +32,11 @@ export async function authMiddleware(req, res, next) {
       where: { userId: user.id, read: false },
     });
     res.locals.unreadCount = unreadCount;
+
+    const unreadMessagesCount = await Message.count({
+      where: { receiverId: user.id, read: false },
+    });
+    res.locals.unreadMessagesCount = unreadMessagesCount;
   } catch (error) {
     console.error('[!] Error al autenticar usuario:', error);
   }
@@ -58,6 +64,11 @@ export async function loadCurrentUser(req, res, next) {
         where: { userId: user.id, read: false },
       });
       res.locals.unreadCount = unreadCount;
+
+      const unreadMessagesCount = await Message.count({
+        where: { receiverId: user.id, read: false },
+      });
+      res.locals.unreadMessagesCount = unreadMessagesCount;
     }
   } catch (error) {
     console.error('[!] Error cargando usuario desde sesión:', error);

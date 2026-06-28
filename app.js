@@ -11,6 +11,7 @@ import collectionsRouter from './routes/collections.js';
 import notificationsRouter from './routes/notifications.js';
 import reportsRouter from './routes/reports.js';
 import validatorRouter from './routes/validator.js';
+import messagesRouter from './routes/messages.js';
 import { loadCurrentUser } from './middlewares/auth.js';
 import session from 'express-session';
 
@@ -66,6 +67,7 @@ app.use('/collections', collectionsRouter);
 app.use('/notifications', notificationsRouter);
 app.use('/reports', reportsRouter);
 app.use('/validator', validatorRouter);
+app.use('/messages', messagesRouter);
 
 
 // CONEXION A BD

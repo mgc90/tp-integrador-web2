@@ -22,7 +22,7 @@ block content
   div(class="max-w-4xl mx-auto")
     
 
-    div(class="m-10")
+    div(class="m-0")
       div(class="p-2")
         div(class="flex items-center gap-2 mb-1")
           
@@ -62,7 +62,7 @@ block content
                 button(class="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg border border-zinc-600 text-zinc-300 hover:border-zinc-400 transition-colors cursor-pointer")
                   span Agregar a colección
                   span(class="text-xs ml-1") ▾
-                div(class="absolute top-full left-0 bg-zinc-800 border border-zinc-600 rounded-lg shadow-lg z-10 hidden group-hover:block min-w-44 overflow-hidden")
+                div(class="absolute top-full left-0 bg-zinc-800 border border-zinc-600 rounded-lg shadow-lg z-10 hidden group-hover:block group-focus-within:block min-w-44 overflow-hidden")
                   each col in otherCollections
                     form(method="POST", action="/collections/" + col.id + "/posts/" + post.id)
                       button(type="submit",
@@ -72,7 +72,7 @@ block content
       each image in post.images
         
         
-        div(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700 m-8")
+        div(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700 my-8")
           if currentUser || image.license === 'no-copyright'
             img(src=image.url, alt=post.title class="w-full aspect-square object-cover")
           else
@@ -124,7 +124,7 @@ block content
                   (image.userInterested
                     ? "border-red-500 text-red-400 bg-red-900/20"
                     : "border-zinc-600 text-zinc-300 hover:border-red-500 hover:text-red-400"))
-                  | #{image.userInterested ? 'Le interesa' : 'Me interesa'}
+                  | #{image.userInterested ? 'Te interesa' : 'Me interesa'}
               if !image.userHasReported
                 button(onclick="openReportModal('image', " + image.id + ")",
                   class="text-xs border border-zinc-600 text-zinc-300 hover:border-yellow-500 hover:text-yellow-400 px-2 py-1 rounded cursor-pointer transition-colors") Denunciar

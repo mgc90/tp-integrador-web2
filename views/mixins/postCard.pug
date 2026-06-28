@@ -1,5 +1,5 @@
 mixin postCard(post, showUser = true)
-  article(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700 h-full flex flex-col ")
+  article(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700 h-full flex flex-col mx-5")
     a(href='/posts/' + post.id, class="flex flex-col")
       if post.images[0]
         if currentUser || post.images[0].license === 'no-copyright'

@@ -9,6 +9,7 @@ import { Follow } from "../models/Follow.js";
 import { Collection } from "../models/Collection.js";
 import { CollectionPost } from "../models/CollectionPost.js";
 import { Report } from "../models/Report.js";
+import { Message } from "../models/Message.js";
 import { notify } from "./notifications.js";
 import sharp from 'sharp';
 import cloudinary from '../config/cloudinary.js';
@@ -346,6 +347,18 @@ export async function toggleInterest(req, res) {
         relatedUserId: userId,
         postId: Number(postId),
         imageId: Number(imageId),
+      });
+
+      const image = await Image.findByPk(Number(imageId), {
+        attributes: ['id'],
+        include: [{ model: Post, attributes: ['title'] }],
+      });
+      const postTitle = image && image.Post ? image.Post.title : '';
+
+      await Message.create({
+        senderId: userId,
+        receiverId: post.userId,
+        content: '¡Hola! Me interesa tu imagen' + (postTitle ? ' "' + postTitle + '"' : '') + '.',
       });
     }
 

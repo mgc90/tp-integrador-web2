@@ -1,0 +1,34 @@
+extends ../layout.pug
+
+block metadata
+  title= partner.firstName + ' ' + partner.lastName + ' - Mensajes - Fotaza'
+
+block content
+  div(class="max-w-3xl mx-auto p-6 flex flex-col h-[90.6vh]")
+    div(class="flex items-center gap-3 mb-6")
+      a(href="/messages", class="text-zinc-500 hover:text-zinc-300 transition-colors text-sm")
+        | &larr; Volver
+      h1(class="text-white text-2xl font-semibold")= partner.firstName + ' ' + partner.lastName
+
+    div(class="flex-1 overflow-y-auto space-y-3 mb-4 pr-2")
+      if messages && messages.length
+        each msg in messages
+          if msg.senderId === currentUser.id
+            div(class="flex justify-end")
+              div(class="bg-red-600 text-white rounded-2xl rounded-br-sm px-4 py-2 max-w-[70%]")
+                p(class="text-sm")= msg.content
+                p(class="text-xs text-red-200 text-right mt-1")= msg.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          else
+            div(class="flex justify-start")
+              div(class="bg-zinc-700 text-zinc-200 rounded-2xl rounded-bl-sm px-4 py-2 max-w-[70%]")
+                p(class="text-sm")= msg.content
+                p(class="text-xs text-zinc-500 mt-1")= msg.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      else
+        p(class="text-zinc-500 text-sm text-center py-8") No hay mensajes aún. Enviá el primero.
+
+    form(method="POST", action="/messages/" + otherUserId, class="flex gap-2")
+      input(type="text", name="content", required, placeholder="Escribí un mensaje...", autocomplete="off",
+        class="flex-1 px-4 py-3 bg-zinc-800 border border-zinc-600 rounded-xl text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-500")
+      button(type="submit",
+        class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl text-sm cursor-pointer transition-colors font-medium")
+        | Enviar
