@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createForm, create, detail, addComment, deleteComment, rateImage, closeComments, openComments, toggleInterest } from '../controllers/posts.js';
+import { toggleFavorite } from '../controllers/collections.js';
 import { authMiddleware } from '../middlewares/auth.js';
 import { uploadImages } from '../middlewares/upload.js';
 
@@ -19,5 +20,6 @@ posts.post('/:postId/images/:imageId/rate', authMiddleware, rateImage);
 posts.post('/:postId/images/:imageId/interest', authMiddleware, toggleInterest);
 posts.post('/:postId/images/:imageId/close-comments', authMiddleware, closeComments);
 posts.post('/:postId/images/:imageId/open-comments', authMiddleware, openComments);
+posts.post('/:postId/favorite', authMiddleware, toggleFavorite);
 
 export default posts;

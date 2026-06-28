@@ -1,4 +1,5 @@
 import { User } from "../models/User.js";
+import { Collection } from "../models/Collection.js";
 import { loginSchema, signupSchema } from "../validators/auth.js";
 
 export async function loginForm(req, res) {
@@ -59,11 +60,17 @@ export async function signup(req, res) {
   const { nombre, apellido, email, password } = result.data;
 
   try {
-    await User.create({
+    const user = await User.create({
       firstName: nombre,
       lastName: apellido,
       email,
       password,
+    });
+
+    await Collection.create({
+      userId: user.id,
+      name: 'Favoritos',
+      isDefault: true,
     });
   } catch (error) {
     console.log(error);

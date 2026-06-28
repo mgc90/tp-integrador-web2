@@ -7,6 +7,9 @@ import { Comment } from './Comment.js';
 import { Valoration } from './Valoration.js';
 import { Interest } from './Interest.js';
 import { Follow } from './Follow.js';
+import { Collection } from './Collection.js';
+import { CollectionPost } from './CollectionPost.js';
+import { Notification } from './Notification.js';
 
 export function initializeAssociations() {
   User.hasMany(Post, { foreignKey: 'userId' });
@@ -45,6 +48,35 @@ export function initializeAssociations() {
     foreignKey: 'followerId',
     otherKey: 'followedId',
   });
+
+  User.hasMany(Collection, { foreignKey: 'userId' });
+  Collection.belongsTo(User, { foreignKey: 'userId' });
+
+  Collection.hasMany(CollectionPost, { foreignKey: 'collectionId' });
+  CollectionPost.belongsTo(Collection, { foreignKey: 'collectionId' });
+
+  Post.hasMany(CollectionPost, { foreignKey: 'postId' });
+  CollectionPost.belongsTo(Post, { foreignKey: 'postId' });
+
+  Collection.belongsToMany(Post, {
+    through: CollectionPost,
+    foreignKey: 'collectionId',
+    otherKey: 'postId',
+  });
+  Post.belongsToMany(Collection, {
+    through: CollectionPost,
+    foreignKey: 'postId',
+    otherKey: 'collectionId',
+  });
+
+  Notification.belongsTo(User, { foreignKey: 'userId', as: 'recipient' });
+  User.hasMany(Notification, { foreignKey: 'userId', as: 'receivedNotifications' });
+  Notification.belongsTo(User, { foreignKey: 'relatedUserId', as: 'actor' });
+  User.hasMany(Notification, { foreignKey: 'relatedUserId', as: 'triggeredNotifications' });
+  Notification.belongsTo(Post, { foreignKey: 'postId' });
+  Post.hasMany(Notification, { foreignKey: 'postId' });
+  Notification.belongsTo(Image, { foreignKey: 'imageId' });
+  Image.hasMany(Notification, { foreignKey: 'imageId' });
 }
 
 export async function connectDatabase() {

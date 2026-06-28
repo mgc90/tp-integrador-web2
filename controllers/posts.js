@@ -6,6 +6,9 @@ import { User } from "../models/User.js";
 import { Valoration } from "../models/Valoration.js";
 import { Interest } from "../models/Interest.js";
 import { Follow } from "../models/Follow.js";
+import { Collection } from "../models/Collection.js";
+import { CollectionPost } from "../models/CollectionPost.js";
+import { notify } from "./notifications.js";
 import sharp from 'sharp';
 import cloudinary from '../config/cloudinary.js';
 import { createPostSchema } from "../validators/post.js";
@@ -81,7 +84,26 @@ export async function detail(req, res) {
       }
     }
 
-    res.render('posts/detail', { post });
+    const userCollections = req.session.user
+      ? await Collection.findAll({
+          where: { userId: req.session.user.id },
+          attributes: ['id', 'name', 'isDefault'],
+          order: [['isDefault', 'DESC'], ['name', 'ASC']],
+        })
+      : [];
+
+    let isFavorited = false;
+    if (req.session.user) {
+      const favCollection = userCollections.find(c => c.isDefault);
+      if (favCollection) {
+        const cp = await CollectionPost.findOne({
+          where: { collectionId: favCollection.id, postId: post.id },
+        });
+        isFavorited = !!cp;
+      }
+    }
+
+    res.render('posts/detail', { post, userCollections, isFavorited });
   } catch (error) {
     console.error('[!] Error al cargar detalle:', error);
     res.status(500).render('index', {
@@ -139,6 +161,15 @@ export async function addComment(req, res) {
       content: result.data.content,
     });
 
+    const commentedPost = await Post.findByPk(postId, { attributes: ['userId'] });
+    await notify({
+      userId: commentedPost.userId,
+      type: 'comment',
+      relatedUserId: req.session.user.id,
+      postId: Number(postId),
+      imageId: Number(imageId),
+    });
+
     res.redirect('/posts/' + postId);
   } catch (error) {
     console.error('[!] Error al comentar:', error);
@@ -162,6 +193,13 @@ export async function rateImage(req, res) {
       await existing.update({ value });
     } else {
       await Valoration.create({ imageId: Number(imageId), userId: req.session.user.id, value });
+      await notify({
+        userId: post.userId,
+        type: 'valoration',
+        relatedUserId: req.session.user.id,
+        postId: Number(postId),
+        imageId: Number(imageId),
+      });
     }
 
     res.redirect('/posts/' + postId);
@@ -221,8 +259,19 @@ export async function toggleInterest(req, res) {
       defaults: { activo: true },
     });
 
+    const wasInactive = !created && !existing.activo;
     if (!created) {
       await existing.update({ activo: !existing.activo });
+    }
+
+    if (created || wasInactive) {
+      await notify({
+        userId: post.userId,
+        type: 'interest',
+        relatedUserId: userId,
+        postId: Number(postId),
+        imageId: Number(imageId),
+      });
     }
 
     res.redirect('/posts/' + postId);

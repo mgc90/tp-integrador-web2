@@ -15,6 +15,12 @@ mixin nav
         +item('/feed', 'Explorar', currentPath == '/feed')
         if currentUser
           +item('/following', 'Siguiendo', currentPath == '/following')
+          li
+            a(href='/notifications', class=(currentPath == '/notifications' ? 'text-red-600 font-medium transition-colors' : 'text-zinc-300 hover:text-red-400 transition-colors'))
+              | Notificaciones
+              if unreadCount
+                span(class="ml-1 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full")= unreadCount
+          +item('/collections', 'Colecciones', currentPath == '/collections')
           +item('/posts/new', 'Publicar', currentPath == '/posts/new')
           if currentUser.rol === 'validator' || currentUser.rol === 'admin'
             +item('/validator', 'Validar', currentPath == '/validator')

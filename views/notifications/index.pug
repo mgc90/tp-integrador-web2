@@ -1,0 +1,65 @@
+extends ../layout.pug
+
+block metadata
+  title Notificaciones - Fotaza
+
+block content
+  div(class="max-w-3xl mx-auto p-6")
+    div(class="flex items-center justify-between mb-8")
+      h1(class="text-white text-3xl font-semibold") Notificaciones
+      if unreadCount > 0
+        form(method="POST", action="/notifications/read-all")
+          button(type="submit",
+            class="text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-300 px-3 py-1.5 rounded-lg transition-colors cursor-pointer")
+            | Marcar todas como leídas
+
+    if notifications && notifications.length
+      div(class="space-y-2")
+        each n in notifications
+          - const actor = n.actor
+          - const actorName = actor ? actor.firstName + ' ' + actor.lastName : 'Alguien'
+          - const timeAgo = n.createdAt ? new Date(n.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
+          - let text = ''
+          - let link = n.postId ? '/posts/' + n.postId : (actor ? '/users/' + actor.id : '#')
+
+          case n.type
+            when 'comment'
+              - text = 'comentó en tu publicación'
+            when 'valoration'
+              - text = 'valoró tu imagen'
+            when 'interest'
+              - text = 'le interesa tu imagen'
+            when 'follow'
+              - text = 'comenzó a seguirte'
+              - link = actor ? '/users/' + actor.id : '#'
+
+          div(class=(n.read ? 'bg-zinc-800/50 border-zinc-700/50' : 'bg-zinc-800 border-red-500/30') + ' rounded-lg border p-4 transition-colors')
+            div(class="flex items-start justify-between gap-4")
+              div(class="flex-1 min-w-0")
+                div(class="flex items-center gap-2")
+                  if !n.read
+                    span(class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0")
+                  p(class="text-zinc-300 text-sm")
+                    a(href='/users/' + (actor ? actor.id : ''), class="text-white hover:text-red-400 font-medium transition-colors")= actorName
+                    |  #{text}
+                    if n.Post
+                      a(href='/posts/' + n.Post.id, class="text-zinc-400 hover:text-red-400 transition-colors")
+                        |  «#{n.Post.title}»
+                p(class="text-zinc-500 text-xs mt-1")= timeAgo
+
+              if !n.read
+                form(method="POST", action="/notifications/" + n.id + "/read")
+                  button(type="submit",
+                    class="text-xs text-zinc-500 hover:text-white transition-colors cursor-pointer flex-shrink-0")
+                    | Leída
+
+      div(class="mt-4 text-center")
+        p(class="text-zinc-600 text-xs")
+          if unreadCount > 0
+            | #{unreadCount} no leída(s) · #{notifications.length} total
+          else
+            | #{notifications.length} notificación(es)
+    else
+      div(class="text-center py-16")
+        p(class="text-zinc-500 text-lg") No tenés notificaciones aún.
+        p(class="text-zinc-600 text-sm mt-2") Cuando alguien interactúe con tu contenido, aparecerá acá.

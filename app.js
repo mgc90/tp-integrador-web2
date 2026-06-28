@@ -7,6 +7,8 @@ import searchRouter from './routes/search.js';
 import usersRouter from './routes/users.js';
 import profileRouter from './routes/profile.js';
 import followingRouter from './routes/following.js';
+import collectionsRouter from './routes/collections.js';
+import notificationsRouter from './routes/notifications.js';
 import { loadCurrentUser } from './middlewares/auth.js';
 import session from 'express-session';
 
@@ -58,6 +60,8 @@ app.use('/search', searchRouter);
 app.use('/users', usersRouter);
 app.use('/profile', profileRouter);
 app.use('/following', followingRouter);
+app.use('/collections', collectionsRouter);
+app.use('/notifications', notificationsRouter);
 
 
 // CONEXION A BD

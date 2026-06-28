@@ -33,6 +33,30 @@ block content
             each tag in post.Tags
               span(class="text-red-400/80 text-sm")= '#' + tag.name
 
+        if currentUser
+          div(class="flex items-center gap-3 mb-6")
+            form(method="POST", action="/posts/" + post.id + "/favorite")
+              button(type="submit",
+                class="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg border cursor-pointer transition-colors " +
+                (isFavorited
+                  ? "border-yellow-500 text-yellow-400 bg-yellow-900/20"
+                  : "border-zinc-600 text-zinc-300 hover:border-yellow-500 hover:text-yellow-400"))
+                span #{isFavorited ? '★' : '☆'}
+                span= isFavorited ? 'En favoritos' : 'Guardar en favoritos'
+
+            - const otherCollections = userCollections ? userCollections.filter(c => !c.isDefault) : []
+            if otherCollections.length
+              div(class="relative group")
+                button(class="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg border border-zinc-600 text-zinc-300 hover:border-zinc-400 transition-colors cursor-pointer")
+                  span Agregar a colección
+                  span(class="text-xs ml-1") ▾
+                div(class="absolute top-full left-0 mt-1 bg-zinc-800 border border-zinc-600 rounded-lg shadow-lg z-10 hidden group-hover:block min-w-44")
+                  each col in otherCollections
+                    form(method="POST", action="/collections/" + col.id + "/posts/" + post.id)
+                      button(type="submit",
+                        class="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer whitespace-nowrap")
+                        | #{col.name}
+
       each image in post.images
         
         
