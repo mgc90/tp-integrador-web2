@@ -1,0 +1,41 @@
+extends ../layout.pug
+
+block metadata
+  title Mis Colecciones - Fotaza
+
+block content
+  div(class="max-w-4xl mx-auto p-6")
+    div(class="flex items-center justify-between mb-8")
+      h1(class="text-white text-3xl font-semibold") Mis Colecciones
+      a(href="/collections/create",
+        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors")
+        | Nueva colección
+
+    if collections && collections.length
+      div(class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4")
+        each col in collections
+          div(class="bg-zinc-800 rounded-lg border border-zinc-700 overflow-hidden hover:border-zinc-500 transition-colors")
+            a(href="/collections/" + col.id, class="block p-5")
+              div(class="flex items-start justify-between")
+                div
+                  h2(class="text-white text-lg font-medium")= col.name
+                  if col.description
+                    p(class="text-zinc-400 text-sm mt-1")= col.description
+                if col.isDefault
+                  span(class="text-yellow-400 text-xs bg-yellow-900/30 px-2 py-1 rounded") Favoritos
+              div(class="mt-4 flex items-center gap-2 text-sm")
+                span(class="text-zinc-500") #{col.get('postCount') || 0} publicaciones
+
+            if !col.isDefault
+              div(class="border-t border-zinc-700 px-5 py-2 flex justify-end")
+                form(method="POST", action="/collections/" + col.id + "/delete",
+                  onsubmit="return confirm('Eliminar esta colección? Las publicaciones no se perderán.')")
+                  button(type="submit",
+                    class="text-xs text-red-400 hover:text-red-300 transition-colors cursor-pointer")
+                    | Eliminar
+    else
+      div(class="text-center py-16")
+        p(class="text-zinc-500 text-lg mb-4") No tenés colecciones aún.
+        a(href="/collections/create",
+          class="text-red-400 hover:text-red-300 transition-colors")
+          | Crear tu primera colección

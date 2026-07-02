@@ -1,70 +1,47 @@
 import { User } from "../models/User.js";
+import { Collection } from "../models/Collection.js";
+import { loginSchema, signupSchema } from "../validators/auth.js";
 
 export async function loginForm(req, res) {
   res.render('auth/login')
 }
 
 export async function login(req, res) {
-  const { email, password } = req.body;
-  const mail = email.trim();
-  const pass = password.trim();
+  const result = loginSchema.safeParse(req.body);
 
-  if(!mail || !pass ){
-    res.status(400).render('auth/login', {
-      alert: {
-        status: "error",
-        text: "Complete todos los campos"
-      },
-      formValues: req.body
-    })
-    return
+  if (!result.success) {
+    const errors = result.error.flatten().fieldErrors;
+    return res.status(400).render('auth/login', { errors, formValues: req.body });
   }
+
+  const { email, password } = result.data;
 
   try {
-    const user = await User.findOne({
-      where: {
-        email: mail
-      }
-    });
-    if(!user){
-      res.status(400).render('auth/login', {
-        alert: {
-          status: "error",
-          text: "Usuario o contrasena incorrecta."
-        },
-        formValues: req.body
-      })
-      return;
-    }
-    const isValidated = await user.validatePassword(pass);
-
-    if(!isValidated){
-      res.status(400).render('auth/login', {
-        alert: {
-          status: "error",
-          text: "Usuario o contrasena incorrecta."
-        },
-        formValues: req.body
-      })
-      return;
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(400).render('auth/login', {
+        alert: { status: "error", text: "Usuario o contraseña incorrecta." },
+        formValues: req.body,
+      });
     }
 
-    req.session.user = {
-      id: user.id,
-    };
+    const isValidated = await user.validatePassword(password);
+    if (!isValidated) {
+      return res.status(400).render('auth/login', {
+        alert: { status: "error", text: "Usuario o contraseña incorrecta." },
+        formValues: req.body,
+      });
+    }
+
+    req.session.user = { id: user.id };
   } catch (error) {
     console.log('[!] Error en login: ', error);
-    res.status(500).render('auth/login', {
-      alert: {
-        status: "error",
-        text: "Hubo un error al iniciar sesion"
-      },
-      formValues: req.body
-    })
-    return;
+    return res.status(500).render('auth/login', {
+      alert: { status: "error", text: "Hubo un error al iniciar sesión" },
+      formValues: req.body,
+    });
   }
 
-  // si esta todo ok => luego de redirecciona al home
   res.redirect('/feed')
 }
 
@@ -73,56 +50,36 @@ export async function signupForm(req, res) {
 }
 
 export async function signup(req, res) {
-  const { nombre, email, password, confirmPassword, apellido } = req.body
+  const result = signupSchema.safeParse(req.body);
 
-  const name = nombre.trim();
-  const lastname = apellido.trim();
-  const mail = email.trim();
-  const pass = password.trim();
-  const confirmPass = confirmPassword.trim();
-
-  if(!name || !lastname || !mail || !pass || !confirmPass){
-    res.status(400).render('auth/signup', {
-      alert: {
-        status: "error",
-        text: "No deben haber campos vacios"
-      },
-      formValues: req.body
-    })
-    return;
+  if (!result.success) {
+    const errors = result.error.flatten().fieldErrors;
+    return res.status(400).render('auth/signup', { errors, formValues: req.body });
   }
 
-  if(pass !== confirmPass){
-    res.status(400).render('auth/signup', {
-      alert: {
-        status: "error",
-        text: "Las contrasenas no coinciden"
-      },
-      formValues: req.body
-    })
-    return;
-  }
+  const { nombre, apellido, email, password } = result.data;
 
   try {
     const user = await User.create({
-      firstName: name,
-      lastName: lastname,
-      email: mail,
-      password: pass
-    })
+      firstName: nombre,
+      lastName: apellido,
+      email,
+      password,
+    });
+
+    await Collection.create({
+      userId: user.id,
+      name: 'Favoritos',
+      isDefault: true,
+    });
   } catch (error) {
     console.log(error);
-    res.status(500).render('auth/signup', {
-      alert: {
-        status: "error",
-        text: "Hubo un error al crear el usuario"
-      },
-      formValues: req.body
-    })
-    return;
+    return res.status(500).render('auth/signup', {
+      alert: { status: "error", text: "Hubo un error al crear el usuario" },
+      formValues: req.body,
+    });
   }
 
-  // si esta todo ok => luego de redirecciona al home
   res.redirect('/auth/login')
 }
 
@@ -130,6 +87,5 @@ export async function logout(req, res) {
   if(req.session){
     await req.session.destroy();
     res.redirect('/auth/login');
-    return;
   }
 }

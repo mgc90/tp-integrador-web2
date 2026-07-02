@@ -7,6 +7,11 @@ import { Comment } from './Comment.js';
 import { Valoration } from './Valoration.js';
 import { Interest } from './Interest.js';
 import { Follow } from './Follow.js';
+import { Collection } from './Collection.js';
+import { CollectionPost } from './CollectionPost.js';
+import { Notification } from './Notification.js';
+import { Report } from './Report.js';
+import { Message } from './Message.js';
 
 export function initializeAssociations() {
   User.hasMany(Post, { foreignKey: 'userId' });
@@ -45,6 +50,48 @@ export function initializeAssociations() {
     foreignKey: 'followerId',
     otherKey: 'followedId',
   });
+
+  User.hasMany(Collection, { foreignKey: 'userId' });
+  Collection.belongsTo(User, { foreignKey: 'userId' });
+
+  Collection.hasMany(CollectionPost, { foreignKey: 'collectionId' });
+  CollectionPost.belongsTo(Collection, { foreignKey: 'collectionId' });
+
+  Post.hasMany(CollectionPost, { foreignKey: 'postId' });
+  CollectionPost.belongsTo(Post, { foreignKey: 'postId' });
+
+  Collection.belongsToMany(Post, {
+    through: CollectionPost,
+    foreignKey: 'collectionId',
+    otherKey: 'postId',
+  });
+  Post.belongsToMany(Collection, {
+    through: CollectionPost,
+    foreignKey: 'postId',
+    otherKey: 'collectionId',
+  });
+
+  Notification.belongsTo(User, { foreignKey: 'userId', as: 'recipient' });
+  User.hasMany(Notification, { foreignKey: 'userId', as: 'receivedNotifications' });
+  Notification.belongsTo(User, { foreignKey: 'relatedUserId', as: 'actor' });
+  User.hasMany(Notification, { foreignKey: 'relatedUserId', as: 'triggeredNotifications' });
+  Notification.belongsTo(Post, { foreignKey: 'postId' });
+  Post.hasMany(Notification, { foreignKey: 'postId' });
+  Notification.belongsTo(Image, { foreignKey: 'imageId' });
+  Image.hasMany(Notification, { foreignKey: 'imageId' });
+
+  Report.belongsTo(Image, { foreignKey: 'imageId' });
+  Image.hasMany(Report, { foreignKey: 'imageId' });
+  Report.belongsTo(Comment, { foreignKey: 'commentId' });
+  Comment.hasMany(Report, { foreignKey: 'commentId' });
+  Report.belongsTo(User, { foreignKey: 'userId', as: 'reporter' });
+  User.hasMany(Report, { foreignKey: 'userId', as: 'reports' });
+  Report.belongsTo(User, { foreignKey: 'resolvedBy', as: 'resolver' });
+
+  Message.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
+  Message.belongsTo(User, { foreignKey: 'receiverId', as: 'receiver' });
+  User.hasMany(Message, { foreignKey: 'senderId', as: 'sentMessages' });
+  User.hasMany(Message, { foreignKey: 'receiverId', as: 'receivedMessages' });
 }
 
 export async function connectDatabase() {
@@ -52,7 +99,7 @@ export async function connectDatabase() {
     initializeAssociations();
     await sequelize.authenticate();
     console.log('[+] Conexion a bd establecida')
-    await sequelize.sync({ alter: false }); // CAMBIAR POR FALSE EN PRODUCCIÓN PARA 
+    await sequelize.sync({ alter: true }); // CAMBIAR POR FALSE EN PRODUCCIÓN PARA 
     // EVITAR BORRADO ACCIDENTAL DE COLUMNAS PARA CREAR SÓLO TABLAS QUE NO EXISTEN
     console.log('[+] Sincronizado de modelos')
  

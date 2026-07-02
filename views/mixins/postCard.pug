@@ -1,9 +1,9 @@
 mixin postCard(post, showUser = true)
-  article(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700 h-full flex flex-col ")
+  article(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700 h-full flex flex-col mx-5")
     a(href='/posts/' + post.id, class="flex flex-col")
       if post.images[0]
         if currentUser || post.images[0].license === 'no-copyright'
-          img(src=post.images[0].url
+          img(src=post.images[0].thumbnailUrl || post.images[0].url
           alt=post.title
           class="w-full aspect-square object-cover")
         else
@@ -22,7 +22,9 @@ mixin postCard(post, showUser = true)
     if showUser
       div(class="flex items-center justify-between p-4 pt-0 text-zinc-500 text-xs")
         div(class="flex items-center gap-2")
-          span= ("Por " + (post.User && post.User.firstName || '') + ' ' + (post.User && post.User.lastName || '')).trim()
+          a(href='/users/' + post.User.id,
+            class="text-zinc-500 hover:text-zinc-300 transition-colors")
+            = ("Por " + (post.User && post.User.firstName || '') + ' ' + (post.User && post.User.lastName || '')).trim()
           if currentUser && post.User && currentUser.id !== post.User.id
             form(method='POST', action='/users/' + post.User.id + '/follow')
               input(type='hidden', name='redirect', value=currentPath)

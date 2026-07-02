@@ -1,0 +1,39 @@
+include ../mixins/alert
+
+doctype html
+html
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    link(rel="stylesheet", href="/styles/output.css")
+    title Editar publicación
+
+  body(class="bg-black min-h-screen flex items-center justify-center")
+    +alert(alert)
+    div(class="bg-zinc-900 border border-zinc-700 rounded-2xl p-8 w-full max-w-2xl shadow-[0_0_30px_5px_rgba(255,255,255,0.1)]")
+      h1(class="text-red-600 text-4xl text-center mb-8") Fotaza
+      h2(class="text-white text-xl text-center mb-6") Editar publicación
+
+      form(method='POST', action='/posts/' + post.id + '/edit')
+        - const titleErr = errors?.title?.[0]
+        div(class="mb-4")
+          label(for='title', class="text-zinc-300 block mb-1") Título
+          input#title(type='text', name='title', value=post.title,
+            class="w-full px-4 py-2 bg-zinc-800 border rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 " +
+            (titleErr ? 'border-red-500' : 'border-zinc-600'))
+          if titleErr
+            p(class="text-red-400 text-xs mt-1")= titleErr
+
+        div(class="mb-6")
+          label(for='description', class="text-zinc-300 block mb-1") Descripción
+          textarea#description(name='description', rows='4',
+            class="w-full px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-red-500") #{post.description || ''}
+
+        div(class="flex gap-3")
+          button(type='submit',
+            class="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors cursor-pointer") Guardar cambios
+          a(href='/posts/' + post.id,
+            class="flex-1 text-center bg-zinc-700 hover:bg-zinc-600 text-zinc-300 font-medium py-2 px-4 rounded-lg transition-colors") Cancelar
+
+      p(class="text-zinc-400 text-center mt-6")
+        a(href='/feed', class="text-red-500 hover:text-red-400") Volver al feed

@@ -15,21 +15,29 @@ html
       h2(class="text-white text-xl text-center mb-6") Nueva publicación
 
       form(method='POST', action='/posts/new', enctype='multipart/form-data')
+        - const titleErr = errors?.title?.[0]
         div(class="mb-4")
           label(for='title', class="text-zinc-300 block mb-1") Título
-          input#title(type='text', name='title', required, value=formValues ? formValues.title : '',
-            class="w-full px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-red-500")
+          input#title(type='text', name='title', value=formValues ? formValues.title : '',
+            class="w-full px-4 py-2 bg-zinc-800 border rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 " +
+            (titleErr ? 'border-red-500' : 'border-zinc-600'))
+          if titleErr
+            p(class="text-red-400 text-xs mt-1")= titleErr
 
         div(class="mb-4")
           label(for='description', class="text-zinc-300 block mb-1") Descripción
           textarea#description(name='description', rows='3',
             class="w-full px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-red-500") #{formValues ? formValues.description : ''}
 
+        - const tagsErr = errors?.tags?.[0]
         div(class="mb-4")
           label(for='tags', class="text-zinc-300 block mb-1") Etiquetas
-          input#tags(type='text', name='tags', required, value=formValues ? formValues.tags : '',
+          input#tags(type='text', name='tags', value=formValues ? formValues.tags : '',
             placeholder='ej: naturaleza, paisaje, atardecer',
-            class="w-full px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-red-500")
+            class="w-full px-4 py-2 bg-zinc-800 border rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 " +
+            (tagsErr ? 'border-red-500' : 'border-zinc-600'))
+          if tagsErr
+            p(class="text-red-400 text-xs mt-1")= tagsErr
           p(class="text-zinc-500 text-sm mt-1") Separadas por coma. Máximo 3.
 
         div(class="mb-6")

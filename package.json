@@ -12,7 +12,8 @@
     "db:seed": "node seeders/seed.js",
     "db:export-seed": "node scripts/exportSeed.js",
     "db:clear": "node scripts/clearDb.js",
-    "db:migrate-uploads": "node scripts/migrateUploads.js"
+    "db:migrate-uploads": "node scripts/migrateUploads.js",
+    "db:backfill-thumbnails": "node scripts/backfillThumbnails.js"
   },
   "type": "module",
   "repository": {
@@ -38,7 +39,8 @@
     "pg-hstore": "^2.3.4",
     "pug": "^3.0.4",
     "sequelize": "^6.37.8",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.0",

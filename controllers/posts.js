@@ -6,8 +6,15 @@ import { User } from "../models/User.js";
 import { Valoration } from "../models/Valoration.js";
 import { Interest } from "../models/Interest.js";
 import { Follow } from "../models/Follow.js";
+import { Collection } from "../models/Collection.js";
+import { CollectionPost } from "../models/CollectionPost.js";
+import { Report } from "../models/Report.js";
+import { Message } from "../models/Message.js";
+import { notify } from "./notifications.js";
 import sharp from 'sharp';
 import cloudinary from '../config/cloudinary.js';
+import { createPostSchema, updatePostSchema } from "../validators/post.js";
+import { createCommentSchema } from "../validators/comment.js";
 
 export async function detail(req, res) {
   try {
@@ -31,6 +38,13 @@ export async function detail(req, res) {
       return res.status(404).render('index', {
         alert: { status: 'error', text: 'Publicación no encontrada' }
       });
+    }
+
+    const isAuthor = req.session.user && post.User && req.session.user.id === post.User.id;
+    const isValidator = req.session.user && (res.locals.currentUser?.rol === 'validator' || res.locals.currentUser?.rol === 'admin');
+
+    if (post.status === 'taken_down' && !isAuthor && !isValidator && !isAuthor) {
+      return res.render('posts/detail', { post, postTakenDown: true });
     }
 
     if (req.session.user && post.User && req.session.user.id !== post.User.id) {
@@ -79,7 +93,76 @@ export async function detail(req, res) {
       }
     }
 
-    res.render('posts/detail', { post });
+    const userCollections = req.session.user
+      ? await Collection.findAll({
+          where: { userId: req.session.user.id },
+          attributes: ['id', 'name', 'isDefault'],
+          order: [['isDefault', 'DESC'], ['name', 'ASC']],
+        })
+      : [];
+
+    let isFavorited = false;
+    if (req.session.user) {
+      const favCollection = userCollections.find(c => c.isDefault);
+      if (favCollection) {
+        const cp = await CollectionPost.findOne({
+          where: { collectionId: favCollection.id, postId: post.id },
+        });
+        isFavorited = !!cp;
+      }
+    }
+
+    const imageIds = post.images.map(i => i.id);
+    const commentIds = post.images.flatMap(i => (i.Comments || []).map(c => c.id));
+
+    let imageReports = [];
+    let commentReports = [];
+
+    if (req.session.user && imageIds.length) {
+      imageReports = await Report.findAll({
+        where: { imageId: imageIds, status: 'pending' },
+        attributes: ['imageId', 'userId'],
+      });
+    }
+
+    if (commentIds.length) {
+      commentReports = await Report.findAll({
+        where: { commentId: commentIds, status: 'pending' },
+        attributes: ['commentId', 'userId'],
+      });
+    }
+
+    if (req.session.user) {
+      const userId = req.session.user.id;
+      for (const image of post.images) {
+        const imgReps = imageReports.filter(r => r.imageId === image.id);
+        image.userHasReported = imgReps.some(r => r.userId === userId);
+        image.reportCount = new Set(imgReps.map(r => r.userId)).size;
+
+        for (const comment of (image.Comments || [])) {
+          const comReps = commentReports.filter(r => r.commentId === comment.id);
+          comment.userHasReported = comReps.some(r => r.userId === userId);
+          comment.reportCount = comReps.length;
+        }
+      }
+    }
+
+    if (isAuthor && commentIds.length) {
+      const fullCommentReports = await Report.findAll({
+        where: { commentId: commentIds, status: 'pending' },
+        include: [{ model: User, as: 'reporter', attributes: ['id', 'firstName', 'lastName'] }],
+        attributes: ['id', 'commentId', 'motivo', 'descripcion', 'createdAt'],
+      });
+      for (const image of post.images) {
+        for (const comment of (image.Comments || [])) {
+          comment.reports = fullCommentReports.filter(r => r.commentId === comment.id);
+        }
+      }
+    }
+
+    const postHasPendingReports = imageReports.length > 0;
+
+    res.render('posts/detail', { post, userCollections, isFavorited, postHasPendingReports });
   } catch (error) {
     console.error('[!] Error al cargar detalle:', error);
     res.status(500).render('index', {
@@ -88,8 +171,35 @@ export async function detail(req, res) {
   }
 }
 
+export async function deleteComment(req, res) {
+  const { postId, imageId, commentId } = req.params;
+
+  try {
+    const post = await Post.findByPk(postId, { attributes: ['id', 'userId'] });
+    if (!post) return res.status(404).redirect('/');
+    if (req.session.user.id !== post.userId) return res.status(403).redirect('/posts/' + postId);
+
+    const comment = await Comment.findOne({
+      where: { id: commentId, imageId },
+      attributes: ['id'],
+    });
+    if (!comment) return res.status(404).redirect('/posts/' + postId);
+
+    await comment.destroy();
+    res.redirect('/posts/' + postId);
+  } catch (error) {
+    console.error('[!] Error al borrar comentario:', error);
+    res.redirect('/posts/' + postId);
+  }
+}
+
 export async function addComment(req, res) {
   const { postId, imageId } = req.params;
+
+  const result = createCommentSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.redirect('/posts/' + postId);
+  }
 
   try {
     const image = await Image.findByPk(imageId, {
@@ -104,15 +214,19 @@ export async function addComment(req, res) {
       return res.redirect('/posts/' + postId);
     }
 
-    const content = req.body.content && req.body.content.trim();
-    if (!content) {
-      return res.redirect('/posts/' + postId);
-    }
-
     await Comment.create({
       imageId: Number(imageId),
       userId: req.session.user.id,
-      content,
+      content: result.data.content,
+    });
+
+    const commentedPost = await Post.findByPk(postId, { attributes: ['userId'] });
+    await notify({
+      userId: commentedPost.userId,
+      type: 'comment',
+      relatedUserId: req.session.user.id,
+      postId: Number(postId),
+      imageId: Number(imageId),
     });
 
     res.redirect('/posts/' + postId);
@@ -138,6 +252,13 @@ export async function rateImage(req, res) {
       await existing.update({ value });
     } else {
       await Valoration.create({ imageId: Number(imageId), userId: req.session.user.id, value });
+      await notify({
+        userId: post.userId,
+        type: 'valoration',
+        relatedUserId: req.session.user.id,
+        postId: Number(postId),
+        imageId: Number(imageId),
+      });
     }
 
     res.redirect('/posts/' + postId);
@@ -147,6 +268,91 @@ export async function rateImage(req, res) {
   }
 }
 
+export async function editForm(req, res) {
+  try {
+    const post = await Post.findByPk(req.params.postId, {
+      attributes: ['id', 'title', 'description', 'userId', 'status'],
+    });
+
+    if (!post) {
+      return res.status(404).render('index', {
+        alert: { status: 'error', text: 'Publicación no encontrada' },
+      });
+    }
+
+    if (req.session.user.id !== post.userId) {
+      return res.status(403).redirect('/posts/' + post.id);
+    }
+
+    if (post.status === 'taken_down') {
+      return res.redirect('/posts/' + post.id);
+    }
+
+    if (await hasPendingReports(post.id)) {
+      return res.redirect('/posts/' + post.id);
+    }
+
+    res.render('posts/edit', { post });
+  } catch (error) {
+    console.error('[!] Error al cargar edición:', error);
+    res.status(500).redirect('/posts/' + req.params.postId);
+  }
+}
+
+export async function update(req, res) {
+  try {
+    const post = await Post.findByPk(req.params.postId, {
+      attributes: ['id', 'title', 'description', 'userId', 'status'],
+    });
+
+    if (!post) {
+      return res.status(404).render('index', {
+        alert: { status: 'error', text: 'Publicación no encontrada' },
+      });
+    }
+
+    if (req.session.user.id !== post.userId) {
+      return res.status(403).redirect('/posts/' + post.id);
+    }
+
+    if (post.status === 'taken_down') {
+      return res.redirect('/posts/' + post.id);
+    }
+
+    if (await hasPendingReports(post.id)) {
+      return res.redirect('/posts/' + post.id);
+    }
+
+    const result = updatePostSchema.safeParse(req.body);
+    if (!result.success) {
+      const errors = result.error.flatten().fieldErrors;
+      return res.status(400).render('posts/edit', {
+        errors,
+        post: { ...post.toJSON(), ...req.body },
+      });
+    }
+
+    await post.update({
+      title: result.data.title,
+      description: result.data.description || null,
+    });
+
+    res.redirect('/posts/' + post.id);
+  } catch (error) {
+    console.error('[!] Error al actualizar publicación:', error);
+    res.status(500).redirect('/posts/' + req.params.postId);
+  }
+}
+
+async function hasPendingReports(postId) {
+  const imageIds = (await Image.findAll({ where: { postId }, attributes: ['id'] })).map(i => i.id);
+  if (!imageIds.length) return false;
+  const count = await Report.count({
+    where: { imageId: imageIds, status: 'pending' },
+  });
+  return count > 0;
+}
+
 export async function closeComments(req, res) {
   const { postId, imageId } = req.params;
   try {
@@ -154,6 +360,11 @@ export async function closeComments(req, res) {
     if (!post) return res.status(404).redirect('/');
     if (!req.session.user || req.session.user.id !== post.userId)
       return res.status(403).redirect('/posts/' + postId);
+
+    if (await hasPendingReports(postId)) {
+      return res.redirect('/posts/' + postId);
+    }
+
     const image = await Image.findByPk(imageId, { attributes: ['id', 'postId'] });
     if (!image || Number(image.postId) !== Number(postId))
       return res.status(404).redirect('/posts/' + postId);
@@ -172,6 +383,11 @@ export async function openComments(req, res) {
     if (!post) return res.status(404).redirect('/');
     if (!req.session.user || req.session.user.id !== post.userId)
       return res.status(403).redirect('/posts/' + postId);
+
+    if (await hasPendingReports(postId)) {
+      return res.redirect('/posts/' + postId);
+    }
+
     const image = await Image.findByPk(imageId, { attributes: ['id', 'postId'] });
     if (!image || Number(image.postId) !== Number(postId))
       return res.status(404).redirect('/posts/' + postId);
@@ -197,8 +413,31 @@ export async function toggleInterest(req, res) {
       defaults: { activo: true },
     });
 
+    const wasInactive = !created && !existing.activo;
     if (!created) {
       await existing.update({ activo: !existing.activo });
+    }
+
+    if (created || wasInactive) {
+      await notify({
+        userId: post.userId,
+        type: 'interest',
+        relatedUserId: userId,
+        postId: Number(postId),
+        imageId: Number(imageId),
+      });
+
+      const image = await Image.findByPk(Number(imageId), {
+        attributes: ['id'],
+        include: [{ model: Post, attributes: ['title'] }],
+      });
+      const postTitle = image && image.Post ? image.Post.title : '';
+
+      await Message.create({
+        senderId: userId,
+        receiverId: post.userId,
+        content: '¡Hola! Me interesa tu imagen' + (postTitle ? ' "' + postTitle + '"' : '') + '.',
+      });
     }
 
     res.redirect('/posts/' + postId);
@@ -213,24 +452,20 @@ export async function createForm(req, res) {
 }
 
 export async function create(req, res) {
-  const { title, description, tags, license1, license2, license3 } = req.body;
+  const result = createPostSchema.safeParse(req.body);
 
-  const name = title.trim();
-  const descr = description ? description.trim() : '';
-
-  if (!name) {
-    return res.status(400).render('posts/new', {
-      alert: { status: 'error', text: 'El título es obligatorio' },
-      formValues: req.body,
-    });
+  if (!result.success) {
+    const errors = result.error.flatten().fieldErrors;
+    return res.status(400).render('posts/new', { errors, formValues: req.body });
   }
 
-  if (!tags || !tags.trim()) {
-    return res.status(400).render('posts/new', {
-      alert: { status: 'error', text: 'Al menos una etiqueta es obligatoria' },
-      formValues: req.body,
-    });
-  }
+  const { title, description, tags } = result.data;
+
+  const user = await User.findByPk(req.session.user.id, {
+    attributes: ['firstName', 'lastName', 'watermarkText'],
+  });
+  
+  const watermarkText = user.watermarkText || `${user.firstName} ${user.lastName} - Fotaza`;
 
   const images = [];
   for (let i = 1; i <= 3; i++) {
@@ -242,20 +477,55 @@ export async function create(req, res) {
       const metadata = await sharp(buffer).metadata();
       const size = Math.min(metadata.width, metadata.height);
 
-      const processedBuffer = await sharp(buffer)
-        .resize(size, size, { fit: 'cover', position: 'center' })
+      let pipeline = sharp(buffer)
+        .resize(size, size, { fit: 'cover', position: 'center' });
+
+      if (license === 'copyright') {
+        const svg = `
+          <svg width="${size}" height="${size}">
+            <text x="50%" y="50%" text-anchor="middle"
+                  dominant-baseline="central"
+                  fill="rgba(255,255,255,0.35)"
+                  font-size="${Math.max(20, Math.floor(size / 22))}"
+                  font-family="Arial" font-weight="bold"
+                  transform="rotate(-30, ${size / 2}, ${size / 2})">
+              ${watermarkText}
+            </text>
+          </svg>`;
+        pipeline = pipeline.composite([{ input: Buffer.from(svg), top: 0, left: 0 }]);
+      }
+
+      const processedBuffer = await pipeline
         .jpeg({ quality: 80 })
         .toBuffer();
 
-      const result = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: 'fotaza' },
-          (error, result) => error ? reject(error) : resolve(result)
-        );
-        stream.end(processedBuffer);
-      });
+      const thumbBuffer = await sharp(processedBuffer)
+        .resize(200, 200)
+        .jpeg({ quality: 70 })
+        .toBuffer();
 
-      images.push({ url: result.secure_url, license: license || 'no-copyright' });
+      const [result, thumbResult] = await Promise.all([
+        new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'fotaza' },
+            (error, result) => error ? reject(error) : resolve(result)
+          );
+          stream.end(processedBuffer);
+        }),
+        new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'fotaza/thumbnails' },
+            (error, result) => error ? reject(error) : resolve(result)
+          );
+          stream.end(thumbBuffer);
+        }),
+      ]);
+
+      images.push({
+        url: result.secure_url,
+        thumbnailUrl: thumbResult.secure_url,
+        license: license || 'no-copyright',
+      });
     }
   }
 
@@ -277,8 +547,8 @@ export async function create(req, res) {
 
   try {
     const post = await Post.create({
-      title: name,
-      description: descr,
+      title,
+      description: description || null,
       userId: req.session.user.id,
     });
 
@@ -286,6 +556,7 @@ export async function create(req, res) {
       await Image.create({
         postId: post.id,
         url: img.url,
+        thumbnailUrl: img.thumbnailUrl,
         license: img.license,
       });
     }

@@ -1,151 +1,257 @@
 # Fotaza
 
-Aplicación web para almacenar, ordenar, buscar y compartir fotografías. Los usuarios pueden publicar imágenes con licencias, comentarlas, valorarlas con estrellas, y seguir a otros usuarios.
-
-## Estructura del Proyecto
-
-```
-tp-integrador/
-├── app.js                  # Entry point: Express, sesión, rutas, conexión BD
-├── package.json
-├── .env.example
-├── config/
-│   ├── cloudinary.js        # SDK de Cloudinary
-│   └── config.json          # Placeholder de Sequelize CLI
-├── models/
-│   ├── config.js            # Conexión Sequelize (PostgreSQL + Neon SSL)
-│   ├── index.js             # Asociaciones y connectDatabase()
-│   ├── User.js / Post.js / Image.js / Tag.js
-│   └── Comment.js / Valoration.js / Interest.js / Follow.js
-├── controllers/
-│   ├── auth.js              # Login, signup, logout
-│   ├── feed.js              # Feed público con orden
-│   ├── posts.js             # CRUD posts, comentarios, rating, interés
-│   ├── search.js            # Búsqueda con filtros
-│   ├── users.js             # Seguir/dejar de seguir
-│   └── profile.js           # Perfil y following
-├── routes/
-│   ├── auth.js / posts.js / search.js
-│   ├── users.js / profile.js / following.js
-├── views/
-│   ├── layout.pug           # Layout raíz
-│   ├── index.pug            # Landing
-│   ├── feedBrowser.pug / following.pug / search.pug / profile.pug
-│   ├── auth/                # login.pug, signup.pug
-│   ├── posts/               # detail.pug, new.pug
-│   ├── mixins/              # nav, alert, feed, postCard, commentCard, filterByOrderBar
-│   └── partials/            # searchBar
-├── middlewares/
-│   └── auth.js              # authMiddleware, loadCurrentUser
-├── scripts/
-│   ├── initDb.js            # npm run db:init
-│   ├── seed.js (seeders/)   # npm run db:seed
-│   ├── exportSeed.js        # npm run db:export-seed
-│   ├── clearDb.js           # npm run db:clear
-│   └── migrateUploads.js    # npm run db:migrate-uploads
-├── public/
-│   ├── styles/output.css    # Tailwind compilado
-│   └── imgs/                # defaultUser.jpg
-└── diagrams/                # Diagramas del TP
-```
+Aplicación web para almacenar, ordenar, buscar y compartir fotografías. Los usuarios pueden publicar imágenes con licencias, comentarlas, valorarlas con estrellas, seguir a otros usuarios, crear colecciones, recibir notificaciones, enviar mensajes privados y reportar contenido.
 
 ## Stack
 
 | Herramienta | Propósito |
 |---|---|
-| **Express** | Framework HTTP para el servidor y enrutamiento |
-| **Pug** | Motor de plantillas que compila vistas HTML con herencia, mixins y lógica embebida |
-| **PostgreSQL + Sequelize** | Base de datos relacional con ORM que abstrae consultas SQL y sincroniza esquemas |
-| **Tailwind CSS v4** | Framework CSS utility-first para diseño responsivo sin CSS propio |
-| **bcrypt** | Librería de hash de contraseñas con salt automático para almacenamiento seguro en BD |
-| **express-session** | Middleware de sesiones del lado del servidor para persistir autenticación vía cookies |
-| **Cloudinary + Sharp** | Servicio externo de almacenamiento de imágenes + procesamiento de imágenes (buffers, resize) |
-| **Multer** | Middleware de subida de archivos que captura imágenes en memoria (memoryStorage) |
-| **dotenv** | Carga variables de entorno desde `.env` a `process.env` en desarrollo |
+| **Express 5** | Framework HTTP para el servidor y enrutamiento |
+| **Pug** | Motor de plantillas con herencia, mixins y lógica embebida |
+| **PostgreSQL + Sequelize 6** | Base de datos relacional con ORM |
+| **Tailwind CSS v4** | Framework CSS utility-first |
+| **bcrypt** | Hash de contraseñas con salt automático |
+| **express-session** | Sesiones del lado del servidor vía cookies |
+| **Cloudinary + Sharp** | Almacenamiento externo de imágenes + procesamiento (resize, watermark) |
+| **Multer** | Subida de archivos en memoria (memoryStorage) |
+| **Zod** | Validación de schemas en el servidor |
+| **dotenv** | Variables de entorno |
+
+## Estructura del Proyecto
+
+```
+tp-integrador/
+├── app.js                    # Entry point: Express, sesiones, rutas, conexión BD
+├── package.json
+├── .env.example
+├── AGENTS.MD                 # Consignas del TP
+├── config/
+│   ├── cloudinary.js          # SDK de Cloudinary
+│   └── config.json            # Placeholder de Sequelize CLI
+├── models/
+│   ├── config.js              # Conexión Sequelize (PostgreSQL + Neon SSL)
+│   ├── index.js               # Asociaciones entre modelos
+│   ├── User.js / Post.js / Image.js / Tag.js
+│   ├── Comment.js / Valoration.js / Interest.js / Follow.js
+│   ├── Collection.js / CollectionPost.js
+│   ├── Notification.js / Report.js / Message.js
+├── controllers/
+│   ├── auth.js                # Login, signup, logout
+│   ├── feed.js                # Feed público con orden dinámico
+│   ├── posts.js               # CRUD posts, comentarios, rating, interés, edición
+│   ├── search.js              # Búsqueda con filtros combinables y paginación
+│   ├── profile.js             # Perfil propio, perfil público, watermark
+│   ├── users.js               # Seguir/dejar de seguir
+│   ├── collections.js         # Colecciones y favoritos
+│   ├── notifications.js       # Notificaciones (crear, listar, marcar leídas)
+│   ├── messages.js            # Mensajería privada
+│   ├── reports.js             # Denuncias de imágenes y comentarios
+│   └── validator.js           # Panel de validador (dar de baja, desestimar)
+├── routes/
+│   ├── auth.js / posts.js / search.js
+│   ├── users.js / profile.js / following.js
+│   ├── collections.js / notifications.js / messages.js
+│   ├── reports.js / validator.js
+├── validators/
+│   ├── auth.js                # Zod schema para login/signup
+│   ├── post.js                # Zod schema para crear/editar posts
+│   ├── comment.js             # Zod schema para comentarios
+│   └── collection.js          # Zod schema para colecciones
+├── middlewares/
+│   ├── auth.js                # authMiddleware, loadCurrentUser
+│   ├── upload.js              # Multer + validación de archivos
+│   └── validator.js           # Restricción de rol validador/admin
+├── views/
+│   ├── layout.pug             # Layout raíz con nav
+│   ├── index.pug              # Landing page
+│   ├── feedBrowser.pug        # Feed público
+│   ├── following.pug          # Publicaciones de seguidos
+│   ├── search.pug             # Búsqueda con paginación
+│   ├── profile.pug            # Perfil del usuario
+│   ├── auth/                  # login.pug, signup.pug
+│   ├── posts/                 # detail.pug, new.pug, edit.pug
+│   ├── collections/           # index.pug, detail.pug, create.pug
+│   ├── notifications/         # index.pug
+│   ├── messages/              # inbox.pug, chat.pug
+│   ├── validator/             # index.pug
+│   ├── mixins/                # nav, alert, feed, postCard, commentCard, filterByOrderBar, reportModal, watermarkEditor
+│   └── partials/              # searchBar
+├── scripts/
+│   ├── initDb.js              # npm run db:init
+│   ├── seeders/seed.js        # npm run db:seed
+│   ├── exportSeed.js          # npm run db:export-seed
+│   ├── clearDb.js             # npm run db:clear
+│   ├── migrateUploads.js      # npm run db:migrate-uploads
+│   └── backfillThumbnails.js  # npm run db:backfill-thumbnails
+├── public/
+│   ├── styles/output.css      # Tailwind compilado
+│   └── imgs/                  # defaultUser.jpg, fotazaCompressed.jpg
+└── diagrams/                  # Diagramas del TP
+```
 
 ## Rutas (Endpoints)
 
-| Ruta | Método | Controlador | Middleware | Descripción |
+### Autenticación (`/auth`)
+
+| Método | Ruta | Controlador | Middleware | Descripción |
 |---|---|---|---|---|
-| `/` | GET | — (inline) | — | Landing page pública |
-| `/feed` | GET | `feed.feed` | — | Feed de publicaciones con orden por fecha/rating/más votado (default) |
-| `/auth/login` | GET / POST | `auth.loginForm` / `auth.login` | — | Mostrar / procesar login |
-| `/auth/signup` | GET / POST | `auth.signupForm` / `auth.signup` | — | Mostrar / procesar registro |
-| `/auth/logout` | POST | `auth.logout` | — | Destruir sesión |
-| `/posts/new` | GET | `posts.createForm` | `authMiddleware` | Formulario de nueva publicación |
-| `/posts/new` | POST | `posts.create` | `authMiddleware` + multer | Crear publicación con imágenes y etiquetas |
-| `/posts/:postId` | GET | `posts.detail` | — | Detalle de publicación con imágenes, valoraciones y comentarios |
-| `/posts/:postId/images/:imageId/comments` | POST | `posts.addComment` | `authMiddleware` | Agregar comentario a una imagen |
-| `/posts/:postId/images/:imageId/rate` | POST | `posts.rateImage` | `authMiddleware` | Valorar imagen (1-5 estrellas) |
-| `/posts/:postId/images/:imageId/interest` | POST | `posts.toggleInterest` | `authMiddleware` | Activar/desactivar "me interesa" |
-| `/posts/:postId/images/:imageId/close-comments` | POST | `posts.closeComments` | `authMiddleware` | Cerrar comentarios de una imagen (solo autor) |
-| `/posts/:postId/images/:imageId/open-comments` | POST | `posts.openComments` | `authMiddleware` | Reabrir comentarios de una imagen (solo autor) |
-| `/search` | GET | `search.search` | — | Buscar publicaciones por título, autor o etiqueta |
-| `/users/:userId/follow` | POST | `users.toggleFollow` | `authMiddleware` | Seguir / dejar de seguir a un usuario |
-| `/profile` | GET | `profile.profile` | `authMiddleware` | Perfil del usuario logueado (seguidores/seguidos) |
-| `/following` | GET | `profile.following` | `authMiddleware` | Publicaciones de usuarios seguidos |
+| GET | `/auth/login` | `auth.loginForm` | — | Mostrar login |
+| POST | `/auth/login` | `auth.login` | — | Procesar login |
+| GET | `/auth/signup` | `auth.signupForm` | — | Mostrar registro |
+| POST | `/auth/signup` | `auth.signup` | — | Procesar registro |
+| POST | `/auth/logout` | `auth.logout` | — | Destruir sesión |
+
+### Posts (`/posts`)
+
+| Método | Ruta | Controlador | Middleware | Descripción |
+|---|---|---|---|---|
+| GET | `/posts/new` | `posts.createForm` | auth | Formulario de nueva publicación |
+| POST | `/posts/new` | `posts.create` | auth + upload | Crear publicación con imágenes |
+| GET | `/posts/:postId` | `posts.detail` | — | Detalle de publicación |
+| GET | `/posts/:postId/edit` | `posts.editForm` | auth | Formulario de edición (solo autor, sin reportes) |
+| POST | `/posts/:postId/edit` | `posts.update` | auth | Procesar edición de título/descripción |
+| POST | `/posts/:postId/images/:imageId/comments` | `posts.addComment` | auth | Agregar comentario |
+| POST | `/posts/:postId/images/:imageId/comments/:commentId/delete` | `posts.deleteComment` | auth | Borrar comentario (solo autor del post) |
+| POST | `/posts/:postId/images/:imageId/rate` | `posts.rateImage` | auth | Valorar imagen (1-5) |
+| POST | `/posts/:postId/images/:imageId/interest` | `posts.toggleInterest` | auth | Me interesa / No me interesa |
+| POST | `/posts/:postId/images/:imageId/close-comments` | `posts.closeComments` | auth | Cerrar comentarios (solo autor) |
+| POST | `/posts/:postId/images/:imageId/open-comments` | `posts.openComments` | auth | Reabrir comentarios (solo autor) |
+| POST | `/posts/:postId/favorite` | `collections.toggleFavorite` | auth | Agregar/quitar de favoritos |
+
+### Búsqueda (`/search`)
+
+| Método | Ruta | Controlador | Middleware | Descripción |
+|---|---|---|---|---|
+| GET | `/search` | `search.search` | — | Buscar con filtros y paginación (12 por página) |
+
+### Usuarios (`/users`)
+
+| Método | Ruta | Controlador | Middleware | Descripción |
+|---|---|---|---|---|
+| GET | `/users/:userId` | `profile.publicProfile` | — | Perfil público de usuario |
+| POST | `/users/:userId/follow` | `users.toggleFollow` | auth | Seguir / dejar de seguir |
+
+### Perfil (`/profile`)
+
+| Método | Ruta | Controlador | Middleware | Descripción |
+|---|---|---|---|---|
+| GET | `/profile` | `profile.profile` | auth | Perfil propio con contadores |
+| POST | `/profile/watermark` | `profile.updateWatermark` | auth | Actualizar texto de marca de agua |
+
+### Following (`/following`)
+
+| Método | Ruta | Controlador | Middleware | Descripción |
+|---|---|---|---|---|
+| GET | `/following` | `profile.following` | auth | Posts de usuarios seguidos |
+
+### Colecciones (`/collections`)
+
+| Método | Ruta | Controlador | Middleware | Descripción |
+|---|---|---|---|---|
+| GET | `/collections` | `collections.index` | auth | Listar colecciones del usuario |
+| GET | `/collections/create` | `collections.createForm` | auth | Formulario de nueva colección |
+| POST | `/collections` | `collections.create` | auth | Crear colección |
+| GET | `/collections/:id` | `collections.detail` | auth | Detalle de colección con posts |
+| POST | `/collections/:id/posts/:postId` | `collections.addPost` | auth | Agregar post a colección |
+| POST | `/collections/:id/posts/:postId/delete` | `collections.removePost` | auth | Quitar post de colección |
+| POST | `/collections/:id/delete` | `collections.destroy` | auth | Eliminar colección |
+
+### Notificaciones (`/notifications`)
+
+| Método | Ruta | Controlador | Middleware | Descripción |
+|---|---|---|---|---|
+| GET | `/notifications` | `notifications.index` | auth | Listar notificaciones |
+| POST | `/notifications/:id/read` | `notifications.markAsRead` | auth | Marcar como leída |
+| POST | `/notifications/read-all` | `notifications.markAllAsRead` | auth | Marcar todas como leídas |
+
+### Mensajes (`/messages`)
+
+| Método | Ruta | Controlador | Middleware | Descripción |
+|---|---|---|---|---|
+| GET | `/messages` | `messages.index` | auth | Bandeja de entrada |
+| GET | `/messages/:userId` | `messages.chat` | auth | Conversación con un usuario |
+| POST | `/messages/:userId` | `messages.send` | auth | Enviar mensaje |
+
+### Denuncias (`/reports`)
+
+| Método | Ruta | Controlador | Middleware | Descripción |
+|---|---|---|---|---|
+| POST | `/reports/images/:imageId` | `reports.reportImage` | auth | Denunciar imagen |
+| POST | `/reports/comments/:commentId` | `reports.reportComment` | auth | Denunciar comentario |
+
+### Validador (`/validator`) — solo rol `validator` o `admin`
+
+| Método | Ruta | Controlador | Middleware | Descripción |
+|---|---|---|---|---|
+| GET | `/validator` | `validator.dashboard` | auth + validator | Panel con denuncias pendientes |
+| POST | `/validator/posts/:id/takedown` | `validator.takeDownPost` | auth + validator | Dar de baja publicación (3 bajas → cuenta inactiva) |
+| POST | `/validator/posts/:id/dismiss` | `validator.dismissPostReports` | auth + validator | Desestimar denuncias del post |
+| POST | `/validator/comments/:id/delete` | `validator.deleteReportedComment` | auth + validator | Eliminar comentario denunciado |
+| POST | `/validator/comments/:id/dismiss` | `validator.dismissCommentReports` | auth + validator | Desestimar denuncias del comentario |
+
+### Generales
+
+| Método | Ruta | Controlador | Middleware | Descripción |
+|---|---|---|---|---|
+| GET | `/` | — (inline) | — | Landing page |
+| GET | `/feed` | `feed.feed` | — | Feed público con orden (default: más votado) |
 
 ## Modelos (BD)
 
-| Modelo | Tabla | Columnas | Asociaciones |
+| Modelo | Tabla | Columnas clave | Asociaciones |
 |---|---|---|---|
-| **User** | `users` | id, firstName, lastName, email, password, avatar, watermarkText, deletedAt | hasMany Post, hasMany Comment, hasMany Valoration, hasMany Interest, belongsToMany User (Follow) |
-| **Post** | `posts` | id, title, description, userId, deletedAt | belongsTo User, hasMany Image, belongsToMany Tag (PostTag) |
-| **Image** | `images` | id, postId, url, thumbnailUrl, altText, license (enum), commentsEnabled | belongsTo Post, hasMany Comment, hasMany Valoration, hasMany Interest |
-| **Tag** | `tags` | id, name | belongsToMany Post (PostTag) |
-| **Comment** | `comments` | id, imageId, userId, content | belongsTo Image, belongsTo User |
-| **Valoration** | `valorations` | id, imageId, userId, value (1-5) | belongsTo Image, belongsTo User. Unique (imageId, userId) |
-| **Interest** | `interests` | id, imageId, userId, activo | belongsTo Image, belongsTo User. Unique (imageId, userId) |
-| **Follow** | `follows` | id, followerId, followedId, deletedAt | belongsTo User (follower / followed). Unique (followerId, followedId) |
+| **User** | `users` | id, firstName, lastName, email, password, avatar, watermarkText, rol, isActive, deletedAt | hasMany Post/Comment/Valoration/Interest, belongsToMany User (Follow) |
+| **Post** | `posts` | id, title, description, userId, status, deletedAt | belongsTo User, hasMany Image, belongsToMany Tag |
+| **Image** | `images` | id, postId, url, thumbnailUrl, altText, license, commentsEnabled, deletedAt | belongsTo Post, hasMany Comment/Valoration/Interest/Report |
+| **Tag** | `tags` | id, name, deletedAt | belongsToMany Post |
+| **Comment** | `comments` | id, imageId, userId, content, deletedAt | belongsTo Image/User, hasMany Report |
+| **Valoration** | `valorations` | id, imageId, userId, value (1-5), deletedAt | belongsTo Image/User. Unique (imageId, userId) |
+| **Interest** | `interests` | id, imageId, userId, activo | belongsTo Image/User. Unique (imageId, userId) |
+| **Follow** | `follows` | id, followerId, followedId, deletedAt | belongsTo User. Unique (followerId, followedId) |
+| **Collection** | `collections` | id, userId, name, description, isDefault | belongsTo User, belongsToMany Post |
+| **CollectionPost** | `collection_posts` | id, collectionId, postId | belongsTo Collection/Post. Unique (collectionId, postId) |
+| **Notification** | `notifications` | id, userId, type, relatedUserId, postId, imageId, read | belongsTo User/Post/Image |
+| **Report** | `reports` | id, imageId, commentId, userId, motivo, descripcion, status, resolvedBy, resolvedAt | belongsTo Image/Comment/User |
+| **Message** | `messages` | id, senderId, receiverId, content, read | belongsTo User (sender/receiver) |
 
-## Vistas (Pug)
+## Funcionalidades
 
-| Archivo | Hereda de | Mixins incluidos | Descripción |
-|---|---|---|---|
-| `layout.pug` | — | nav, alert | Layout raíz con nav + alert + bloque hero/content |
-| `index.pug` | layout | — | Landing page pública |
-| `feedBrowser.pug` | layout | feed, filterByOrderBar | Feed público con barra de orden |
-| `following.pug` | layout | feed, filterByOrderBar | Publicaciones de seguidos con barra de orden |
-| `search.pug` | layout | feed, filterByOrderBar | Búsqueda con filtros y barra de orden |
-| `profile.pug` | layout | — | Perfil del usuario (avatar, seguidores, seguidos) |
-| `posts/detail.pug` | layout | commentCard | Detalle de post con imágenes, valoración, comentarios e interés |
-| `posts/new.pug` | layout | — | Formulario de nueva publicación |
-| `auth/login.pug` | layout | — | Formulario de inicio de sesión |
-| `auth/signup.pug` | layout | — | Formulario de registro |
-| `mixins/nav.pug` | — | — | Barra de navegación con enlaces según auth |
-| `mixins/alert.pug` | — | — | Alertas de feedback (error/success) |
-| `mixins/feed.pug` | — | postCard | Grid de tarjetas de publicaciones |
-| `mixins/postCard.pug` | — | — | Tarjeta individual de publicación con botón seguir |
-| `mixins/commentCard.pug` | — | — | Comentario con autor y contenido |
-| `mixins/filterByOrderBar.pug` | — | — | Botones de orden (más reciente, más antiguo, mejor valorado, más votado) |
-| `partials/searchBar.pug` | — | — | Barra de búsqueda global en el nav |
-
-## Controladores
-
-| Archivo | Funciones | Descripción |
-|---|---|---|
-| `auth.js` | loginForm, login, signupForm, signup, logout | Autenticación: mostrar formularios, validar credenciales, crear/destruir sesión |
-| `feed.js` | feed | Feed público con orden dinámico (default: más votado) y estado de follow |
-| `posts.js` | detail, createForm, create, addComment, rateImage, closeComments, openComments, toggleInterest | CRUD de publicaciones, comentarios por imagen, valoración, toggle "me interesa", cierre/apertura de comentarios |
-| `search.js` | search | Búsqueda con filtros combinables (título, autor, etiqueta) y orden dinámico |
-| `users.js` | toggleFollow | Seguir/dejar de seguir con soft-delete y restore |
-| `profile.js` | profile, following | Perfil del usuario y feed de publicaciones de usuarios seguidos |
+- **Registro y login** con bcrypt + sesiones (express-session)
+- **Publicaciones**: título, descripción, 1-3 imágenes, etiquetas, licencia por imagen (copyright / no-copyright)
+- **Edición de publicaciones**: solo título y descripción, bloqueada si hay denuncias pendientes
+- **Marca de agua**: imágenes con copyright obtienen watermark SVG con texto personalizable por el usuario
+- **Comentarios** por imagen, el autor puede cerrarlos/reactivarlos
+- **Valoración**: 1-5 estrellas, una vez por usuario, el autor no puede votar, muestra promedio y cantidad
+- **"Me interesa"**: toggle + notificación + mensaje automático al autor
+- **Licencias**: copyright (marca de agua, bloqueado para anónimos) y no-copyright (público)
+- **Feed público** con orden dinámico: más reciente, más antiguo, mejor valorado, más votado (default)
+- **Búsqueda** con filtros combinables (título, autor, etiqueta) y paginación (12 por página)
+- **Seguimiento**: follow/unfollow con soft-delete, no self-follow, perfil con contadores
+- **Feed de seguidos**: `/following` muestra posts de usuarios seguidos
+- **Colecciones**: CRUD, colección default "Favoritos", sin duplicados
+- **Notificaciones**: eventos (comment, valoration, interest, follow), marcar leídas, marcar todas leídas
+- **Denuncias**: imágenes y comentarios con motivo + descripción, sin duplicados por usuario
+- **Validador**: panel con reportes (3+ denuncias), dar de baja o desestimar, 3 bajas → cuenta inactiva
+- **Autor de post**: ve denuncias de comentarios y puede borrarlos
+- **Mensajería privada**: inbox con conversaciones, envío automático al clickear "me interesa"
+- **Cloudinary + thumbnails**: imágenes subidas a Cloudinary con thumbnail (200x200)
+- **Validación Zod**: schemas en auth, posts, comentarios y colecciones
 
 ## Middleware
 
-| Archivo | Función | Descripción |
-|---|---|---|
-| `middlewares/auth.js` | authMiddleware | Protege rutas: redirige a login si no hay sesión. Setea `res.locals.currentUser` |
-| `middlewares/auth.js` | loadCurrentUser | Middleware global: carga usuario desde sesión en `res.locals.currentUser` si existe |
-| — | express-session | Maneja sesiones con cookie firmada (24h de vida) |
-| — | multer (memoryStorage) | Captura archivos en buffer para procesarlos con Sharp antes de subir a Cloudinary |
+| Middleware | Descripción |
+|---|---|
+| `loadCurrentUser` (global) | Carga usuario desde sesión a `res.locals.currentUser` |
+| `authMiddleware` | Protege rutas, redirige a login si no hay sesión |
+| `uploadImages` | Multer con memoryStorage, 5MB máx, formatos jpeg/png/gif/webp |
+| `validatorMiddleware` | Restringe acceso a usuarios con rol `validator` o `admin` |
 
 ## Requisitos
 
 - Node.js 18+
 - PostgreSQL (local o Neon)
 - Cuenta en [Cloudinary](https://cloudinary.com)
-- Cuenta en [Neon](https://neon.tech) (producción)
+- Cuenta en [Neon](https://neon.tech) (opcional, para producción)
 
 ## Configuración
 
@@ -154,14 +260,14 @@ tp-integrador/
 3. Tener PostgreSQL corriendo en local
 4. Ejecutar `npm run db:init` para crear tablas
 5. Ejecutar `npm run db:seed` para poblar la BD con datos demo
-6. `npm run dev` para desarrollo con Tailwind + BrowserSync
+6. `npm run dev` para desarrollo
 7. `npm start` para producción
 
 ## Variables de Entorno (`.env`)
 
 ```
 PORT=4000
-DB_HOST=localhost           # localhost en dev / ep-xxxx.neon.tech en prod
+DB_HOST=localhost
 DB_USER=postgres
 DB_PASSWORD=tu_password
 DB_NAME=fotaza
@@ -178,11 +284,12 @@ CLOUDINARY_API_SECRET=tu_api_secret
 |---|---|
 | `npm start` | Inicia el servidor en producción |
 | `npm run dev` | Desarrollo con Tailwind watch + BrowserSync + nodemon |
-| `npm run db:init` | Crea tablas si no existen (seguro para producción) |
-| `npm run db:seed` | Pobla la BD con datos (usa `force: true`, solo para BD vacía) |
+| `npm run db:init` | Crea/actualiza tablas con `alter: true` |
+| `npm run db:seed` | Pobla la BD con datos demo |
 | `npm run db:export-seed` | Exporta datos actuales a `seeders/seed.js` |
 | `npm run db:clear` | Vacía todas las tablas (truncate) |
-| `npm run db:migrate-uploads` | Migra imágenes locales (`public/uploads/`) a Cloudinary |
+| `npm run db:migrate-uploads` | Migra imágenes locales a Cloudinary |
+| `npm run db:backfill-thumbnails` | Genera thumbnails faltantes |
 
 ## Deploy en Render + Neon
 

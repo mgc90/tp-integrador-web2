@@ -1,5 +1,6 @@
 extends ../layout.pug
 include ../mixins/commentCard
+include ../mixins/reportModal
 
 
 
@@ -7,10 +8,21 @@ block metadata
   title= post.title + ' - Fotaza'
 
 block content
+  if postTakenDown
+    div(class="max-w-2xl mx-auto text-center py-20 px-6")
+      div(class="text-red-400 text-5xl mb-4")
+      h2(class="text-white text-2xl font-semibold mb-2") Publicación no disponible
+      p(class="text-zinc-400 mb-6") Esta publicación fue removida por violar nuestras normas de contenido.
+      if post.User
+        p(class="text-zinc-500 text-sm") Autor: #{post.User.firstName} #{post.User.lastName}
+      a(href="/feed", class="inline-block text-red-400 hover:text-red-300 transition-colors text-sm mt-4")
+        | Volver al feed
+    - return
+
   div(class="max-w-4xl mx-auto")
     
 
-    div(class="m-10")
+    div(class="m-0")
       div(class="p-2")
         div(class="flex items-center gap-2 mb-1")
           
@@ -33,10 +45,41 @@ block content
             each tag in post.Tags
               span(class="text-red-400/80 text-sm")= '#' + tag.name
 
+        if currentUser && currentUser.id === post.User.id
+          if postHasPendingReports
+            p(class="text-yellow-400 text-xs mb-4") No podés editar esta publicación porque tiene denuncias pendientes.
+          else
+            a(href='/posts/' + post.id + '/edit',
+              class="inline-block text-xs border border-zinc-600 text-zinc-300 hover:border-zinc-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors mb-4") Editar publicación
+
+        if currentUser
+          div(class="flex items-center gap-3 mb-6")
+            form(method="POST", action="/posts/" + post.id + "/favorite")
+              button(type="submit",
+                class="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg border cursor-pointer transition-colors " +
+                (isFavorited
+                  ? "border-yellow-500 text-yellow-400 bg-yellow-900/20"
+                  : "border-zinc-600 text-zinc-300 hover:border-yellow-500 hover:text-yellow-400"))
+                span #{isFavorited ? '★' : '☆'}
+                span= isFavorited ? 'En favoritos' : 'Guardar en favoritos'
+
+            - const otherCollections = userCollections ? userCollections.filter(c => !c.isDefault) : []
+            if otherCollections.length
+              div(class="relative group")
+                button(class="flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg border border-zinc-600 text-zinc-300 hover:border-zinc-400 transition-colors cursor-pointer")
+                  span Agregar a colección
+                  span(class="text-xs ml-1") ▾
+                div(class="absolute top-full left-0 bg-zinc-800 border border-zinc-600 rounded-lg shadow-lg z-10 hidden group-hover:block group-focus-within:block min-w-44 overflow-hidden")
+                  each col in otherCollections
+                    form(method="POST", action="/collections/" + col.id + "/posts/" + post.id)
+                      button(type="submit",
+                        class="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors cursor-pointer whitespace-nowrap")
+                        | #{col.name}
+
       each image in post.images
         
         
-        div(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700 m-8")
+        div(class="bg-zinc-800 rounded-lg overflow-hidden border border-zinc-700 my-8")
           if currentUser || image.license === 'no-copyright'
             img(src=image.url, alt=post.title class="w-full aspect-square object-cover")
           else
@@ -88,7 +131,10 @@ block content
                   (image.userInterested
                     ? "border-red-500 text-red-400 bg-red-900/20"
                     : "border-zinc-600 text-zinc-300 hover:border-red-500 hover:text-red-400"))
-                  | #{image.userInterested ? 'Le interesa' : 'Me interesa'}
+                  | #{image.userInterested ? 'Te interesa' : 'Me interesa'}
+              if !image.userHasReported
+                button(onclick="openReportModal('image', " + image.id + ")",
+                  class="text-xs border border-zinc-600 text-zinc-300 hover:border-yellow-500 hover:text-yellow-400 px-2 py-1 rounded cursor-pointer transition-colors") Denunciar
             if currentUser && post.User && currentUser.id === post.User.id
               span(class="text-xs text-zinc-500") #{image.activeInterestCount} interesado(s)
 
@@ -103,9 +149,32 @@ block content
           if image.Comments && image.Comments.length
             div(class="space-y-2 mb-4")
               each comment in image.Comments
-                +commentCard(comment)
+                +commentCard(comment, post.User.id, post.id)
           else
             p(class="text-zinc-500 text-sm m-2") Sin comentarios aún.
+
+          if currentUser && post.User && currentUser.id === post.User.id
+            - const reportedComms = (image.Comments || []).filter(c => c.reports && c.reports.length)
+            if reportedComms.length
+              div(class="mt-4 p-3 bg-red-900/20 border border-red-700/50 rounded-lg")
+                h4(class="text-red-400 text-sm font-semibold mb-2") Denuncias en comentarios
+                each comment in reportedComms
+                  div(class="mb-3 p-2 bg-zinc-800/50 rounded")
+                    p(class="text-zinc-300 text-xs mb-1")
+                      | Comentario de #{comment.User ? comment.User.firstName + ' ' + comment.User.lastName : '?'}: 
+                      span(class="text-zinc-400") "#{comment.content}"
+                    each report in comment.reports
+                      div(class="ml-2 mt-1 p-1.5 bg-zinc-900/50 rounded border-l-2 border-yellow-600")
+                        p(class="text-yellow-400 text-xs")
+                          | Denunciado por #{report.reporter ? report.reporter.firstName + ' ' + report.reporter.lastName : '?'}
+                        p(class="text-zinc-400 text-xs") Motivo: #{report.motivo}
+                        if report.descripcion
+                          p(class="text-zinc-500 text-xs") #{report.descripcion}
+                        p(class="text-zinc-600 text-xs") #{report.createdAt ? report.createdAt.toLocaleDateString() : ''}
+                    form(method='POST', action='/posts/' + post.id + '/images/' + comment.imageId + '/comments/' + comment.id + '/delete',
+                      onsubmit="return confirm('¿Seguro que deseas borrar este comentario?')")
+                      button(type='submit',
+                        class="text-xs text-red-400 hover:text-red-300 transition-colors cursor-pointer mt-1") Borrar comentario
 
           if currentUser && image.commentsEnabled
             form(method='POST', action='/posts/' + post.id + '/images/' + image.id + '/comments', class="flex gap-2")
@@ -113,3 +182,5 @@ block content
                 class="flex-1 px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white text-sm placeholder-zinc-500 focus:outline-none focus:border-red-500")
               button(type='submit',
                 class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm cursor-pointer transition-colors") Comentar
+
+  +reportModal()

@@ -8,22 +8,97 @@ import sequelize from "../models/config.js";
 export async function profile(req, res) {
   try {
     const user = await User.findByPk(req.session.user.id, {
-      attributes: ['id', 'firstName', 'lastName', 'email', 'avatar'],
+      attributes: ['id', 'firstName', 'lastName', 'email', 'avatar', 'watermarkText'],
     });
 
     if (!user) {
       return res.redirect('/auth/login');
     }
 
-    const [followersCount, followingCount] = await Promise.all([
+    const [followersCount, followingCount, posts] = await Promise.all([
       Follow.count({ where: { followedId: user.id } }),
       Follow.count({ where: { followerId: user.id } }),
+      Post.findAll({
+        include: [
+          { model: Tag },
+          { model: Image, as: 'images', attributes: ['id', 'url', 'thumbnailUrl', 'license'] },
+          { model: User, attributes: ['id', 'firstName', 'lastName'] },
+        ],
+        where: { userId: user.id },
+        order: [['createdAt', 'DESC']],
+      }),
     ]);
 
-    res.render('profile', { user, followersCount, followingCount });
+    res.render('profile', { user, posts, followersCount, followingCount, isOwnProfile: true });
   } catch (error) {
     console.error('[!] Error al cargar perfil:', error);
     res.redirect('/');
+  }
+}
+
+export async function publicProfile(req, res) {
+  try {
+    const userId = Number(req.params.userId);
+
+    if (req.session.user && req.session.user.id === userId) {
+      return res.redirect('/profile');
+    }
+
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'firstName', 'lastName', 'avatar'],
+    });
+
+    if (!user) {
+      return res.status(404).render('index', {
+        alert: { status: 'error', text: 'Usuario no encontrado' }
+      });
+    }
+
+    const [followersCount, followingCount, posts] = await Promise.all([
+      Follow.count({ where: { followedId: user.id } }),
+      Follow.count({ where: { followerId: user.id } }),
+      Post.findAll({
+        include: [
+          { model: Tag },
+          { model: Image, as: 'images', attributes: ['id', 'url', 'thumbnailUrl', 'license'] },
+          { model: User, attributes: ['id', 'firstName', 'lastName'] },
+        ],
+        where: { userId: user.id, status: 'active' },
+        order: [['createdAt', 'DESC']],
+      }),
+    ]);
+
+    let isFollowing = false;
+    if (req.session.user) {
+      const follow = await Follow.findOne({
+        where: { followerId: req.session.user.id, followedId: user.id },
+        attributes: ['id'],
+      });
+      isFollowing = !!follow;
+    }
+
+    res.render('profile', {
+      user,
+      posts,
+      followersCount,
+      followingCount,
+      isOwnProfile: false,
+      isFollowing,
+    });
+  } catch (error) {
+    console.error('[!] Error al cargar perfil público:', error);
+    res.redirect('/');
+  }
+}
+
+export async function updateWatermark(req, res) {
+  try {
+    const text = req.body.watermarkText ? req.body.watermarkText.trim() : null;
+    await User.update({ watermarkText: text }, { where: { id: req.session.user.id } });
+    res.redirect('/profile');
+  } catch (error) {
+    console.error('[!] Error al actualizar marca de agua:', error);
+    res.redirect('/profile');
   }
 }
 
@@ -80,7 +155,7 @@ export async function following(req, res) {
           { model: Image, as: 'images', attributes: ['id', 'url', 'license'] },
           { model: User, attributes: ['id', 'firstName', 'lastName'] },
         ],
-        where: { userId: followedIds },
+        where: { userId: followedIds, status: 'active' },
         order,
       });
 

@@ -11,7 +11,7 @@ block content
       h1(class="text-2xl text-white font-semibold mb-1")
         | Resultados para: 
         span(class="text-red-400")= query
-      p(class="text-zinc-400 text-sm mb-4")= count + ' resultado(s)'
+      p(class="text-zinc-400 text-sm mb-4")= total + ' resultado(s)'
 
       - function toggleFilterUrl(filter) {
       -   const others = activeFilters.filter(f => f !== filter)
@@ -35,5 +35,21 @@ block content
 
     if posts.length
       +feed(posts)
+
+      if totalPages > 1
+        div(class="flex items-center justify-center gap-2 mt-8")
+          if page > 1
+            - var prevParams = 'q=' + encodeURIComponent(query) + (activeFilters.length ? '&filter=' + activeFilters.map(encodeURIComponent).join('&filter=') : '') + (sort ? '&sort=' + encodeURIComponent(sort) : '') + '&page=' + (page - 1)
+            a(href='/search?' + prevParams, class="px-3 py-1.5 rounded-lg border border-zinc-600 text-zinc-300 hover:border-zinc-400 hover:text-white text-sm transition-colors") Anterior
+          - var p = 1
+          while p <= totalPages
+            - var pageParams = 'q=' + encodeURIComponent(query) + (activeFilters.length ? '&filter=' + activeFilters.map(encodeURIComponent).join('&filter=') : '') + (sort ? '&sort=' + encodeURIComponent(sort) : '') + '&page=' + p
+            a(href='/search?' + pageParams,
+              class="px-3 py-1.5 rounded-lg border text-sm transition-colors " +
+              (p === page ? "bg-red-600 border-red-600 text-white" : "border-zinc-600 text-zinc-300 hover:border-zinc-400 hover:text-white"))= p
+            - p++
+          if page < totalPages
+            - var nextParams = 'q=' + encodeURIComponent(query) + (activeFilters.length ? '&filter=' + activeFilters.map(encodeURIComponent).join('&filter=') : '') + (sort ? '&sort=' + encodeURIComponent(sort) : '') + '&page=' + (page + 1)
+            a(href='/search?' + nextParams, class="px-3 py-1.5 rounded-lg border border-zinc-600 text-zinc-300 hover:border-zinc-400 hover:text-white text-sm transition-colors") Siguiente
     else if query
       p(class="text-zinc-500 text-center py-16 text-lg") No se encontraron publicaciones.
