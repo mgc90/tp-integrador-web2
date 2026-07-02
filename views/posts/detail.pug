@@ -45,6 +45,13 @@ block content
             each tag in post.Tags
               span(class="text-red-400/80 text-sm")= '#' + tag.name
 
+        if currentUser && currentUser.id === post.User.id
+          if postHasPendingReports
+            p(class="text-yellow-400 text-xs mb-4") No podés editar esta publicación porque tiene denuncias pendientes.
+          else
+            a(href='/posts/' + post.id + '/edit',
+              class="inline-block text-xs border border-zinc-600 text-zinc-300 hover:border-zinc-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors mb-4") Editar publicación
+
         if currentUser
           div(class="flex items-center gap-3 mb-6")
             form(method="POST", action="/posts/" + post.id + "/favorite")

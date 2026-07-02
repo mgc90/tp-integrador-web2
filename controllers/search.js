@@ -8,42 +8,44 @@ import sequelize from "../models/config.js";
 
 export async function search(req, res) {
   const q = (req.query.q || '').trim();
-  const activeFilters = [].concat(req.query.filter || []);
+  let activeFilters = [].concat(req.query.filter || []);
+  if (activeFilters.length === 0) activeFilters = ['title'];
   const sort = req.query.sort || '';
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = 12;
+  const offset = (page - 1) * limit;
 
   if (!q) {
-    return res.render('search', { posts: [], query: '', count: 0, activeFilters, sort });
+    return res.render('search', { posts: [], query: '', total: 0, activeFilters, sort, page, totalPages: 0 });
   }
 
   try {
-    const orConditions = [];
-
-    if (activeFilters.length === 0) {
-      orConditions.push(
+    const postConditions = [];
+    if (activeFilters.includes('title')) {
+      postConditions.push(
         { title: { [Op.iLike]: `%${q}%` } },
         { description: { [Op.iLike]: `%${q}%` } },
-        { '$Tags.name$': { [Op.iLike]: `%${q}%` } },
-        { '$User.firstName$': { [Op.iLike]: `%${q}%` } },
-        { '$User.lastName$': { [Op.iLike]: `%${q}%` } },
       );
-    } else {
-      if (activeFilters.includes('title')) {
-        orConditions.push(
-          { title: { [Op.iLike]: `%${q}%` } },
-          { description: { [Op.iLike]: `%${q}%` } },
-        );
-      }
-      if (activeFilters.includes('author')) {
-        orConditions.push(
-          { '$User.firstName$': { [Op.iLike]: `%${q}%` } },
-          { '$User.lastName$': { [Op.iLike]: `%${q}%` } },
-        );
-      }
-      if (activeFilters.includes('tag')) {
-        orConditions.push(
-          { '$Tags.name$': { [Op.iLike]: `%${q}%` } },
-        );
-      }
+    }
+
+    const userInclude = {
+      model: User,
+      attributes: ['id', 'firstName', 'lastName'],
+    };
+    if (activeFilters.includes('author')) {
+      userInclude.required = true;
+      userInclude.where = {
+        [Op.or]: [
+          { firstName: { [Op.iLike]: `%${q}%` } },
+          { lastName: { [Op.iLike]: `%${q}%` } },
+        ],
+      };
+    }
+
+    const tagInclude = { model: Tag };
+    if (activeFilters.includes('tag')) {
+      tagInclude.required = true;
+      tagInclude.where = { name: { [Op.iLike]: `%${q}%` } };
     }
 
     let order;
@@ -78,14 +80,32 @@ export async function search(req, res) {
       order = [['createdAt', 'DESC']];
     }
 
+    const includes = [
+      { model: Image, as: 'images' },
+      userInclude,
+      tagInclude,
+    ];
+
+    const countIncludes = [
+      { model: Image, as: 'images', attributes: [] },
+      { ...userInclude, attributes: [] },
+      { ...tagInclude, attributes: [] },
+    ];
+
+    const where = {
+      ...(postConditions.length ? { [Op.or]: postConditions } : {}),
+      status: 'active',
+    };
+
+    const total = await Post.count({ include: countIncludes, where, distinct: true });
+    const totalPages = Math.ceil(total / limit);
+
     const posts = await Post.findAll({
-      include: [
-        { model: Image, as: 'images' },
-        { model: User, attributes: ['id', 'firstName', 'lastName'] },
-        { model: Tag },
-      ],
-      where: { [Op.or]: orConditions, status: 'active' },
+      include: includes,
+      where,
       order,
+      limit,
+      offset,
       distinct: true,
     });
 
@@ -104,9 +124,9 @@ export async function search(req, res) {
     res.locals.searchQuery = q;
     res.locals.searchFilters = activeFilters;
     res.locals.searchSort = sort;
-    res.render('search', { posts, query: q, count: posts.length, activeFilters, sort });
+    res.render('search', { posts, query: q, total, activeFilters, sort, page, totalPages });
   } catch (error) {
     console.error('[!] Error en búsqueda:', error);
-    res.render('search', { posts: [], query: q, count: 0, activeFilters, sort });
+    res.render('search', { posts: [], query: q, total: 0, activeFilters, sort, page, totalPages: 0 });
   }
 }

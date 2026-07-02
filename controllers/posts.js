@@ -13,7 +13,7 @@ import { Message } from "../models/Message.js";
 import { notify } from "./notifications.js";
 import sharp from 'sharp';
 import cloudinary from '../config/cloudinary.js';
-import { createPostSchema } from "../validators/post.js";
+import { createPostSchema, updatePostSchema } from "../validators/post.js";
 import { createCommentSchema } from "../validators/comment.js";
 
 export async function detail(req, res) {
@@ -160,7 +160,9 @@ export async function detail(req, res) {
       }
     }
 
-    res.render('posts/detail', { post, userCollections, isFavorited });
+    const postHasPendingReports = imageReports.length > 0;
+
+    res.render('posts/detail', { post, userCollections, isFavorited, postHasPendingReports });
   } catch (error) {
     console.error('[!] Error al cargar detalle:', error);
     res.status(500).render('index', {
@@ -263,6 +265,82 @@ export async function rateImage(req, res) {
   } catch (error) {
     console.error('[!] Error al valorar:', error);
     res.redirect('/posts/' + postId);
+  }
+}
+
+export async function editForm(req, res) {
+  try {
+    const post = await Post.findByPk(req.params.postId, {
+      attributes: ['id', 'title', 'description', 'userId', 'status'],
+    });
+
+    if (!post) {
+      return res.status(404).render('index', {
+        alert: { status: 'error', text: 'Publicación no encontrada' },
+      });
+    }
+
+    if (req.session.user.id !== post.userId) {
+      return res.status(403).redirect('/posts/' + post.id);
+    }
+
+    if (post.status === 'taken_down') {
+      return res.redirect('/posts/' + post.id);
+    }
+
+    if (await hasPendingReports(post.id)) {
+      return res.redirect('/posts/' + post.id);
+    }
+
+    res.render('posts/edit', { post });
+  } catch (error) {
+    console.error('[!] Error al cargar edición:', error);
+    res.status(500).redirect('/posts/' + req.params.postId);
+  }
+}
+
+export async function update(req, res) {
+  try {
+    const post = await Post.findByPk(req.params.postId, {
+      attributes: ['id', 'title', 'description', 'userId', 'status'],
+    });
+
+    if (!post) {
+      return res.status(404).render('index', {
+        alert: { status: 'error', text: 'Publicación no encontrada' },
+      });
+    }
+
+    if (req.session.user.id !== post.userId) {
+      return res.status(403).redirect('/posts/' + post.id);
+    }
+
+    if (post.status === 'taken_down') {
+      return res.redirect('/posts/' + post.id);
+    }
+
+    if (await hasPendingReports(post.id)) {
+      return res.redirect('/posts/' + post.id);
+    }
+
+    const result = updatePostSchema.safeParse(req.body);
+    if (!result.success) {
+      const errors = result.error.flatten().fieldErrors;
+      return res.status(400).render('posts/edit', {
+        errors,
+        post: { ...post.toJSON(), ...req.body },
+      });
+    }
+
+    await post.update({
+      title: result.data.title,
+      description: result.data.description || null,
+    });
+
+    res.redirect('/posts/' + post.id);
+  } catch (error) {
+    console.error('[!] Error al actualizar publicación:', error);
+    res.status(500).redirect('/posts/' + req.params.postId);
   }
 }
 
