@@ -2,7 +2,7 @@ mixin alert(alert=undefined)
   if alert
     case alert.status
       when "error"
-        div(class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded-lg mb-4 text-center")
+        div(class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded-lg mb-4 text-center ")
           p #{alert.text}
       when "success"
         div(class="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded-lg mb-4 text-center")

@@ -32,7 +32,7 @@ export async function login(req, res) {
         formValues: req.body,
       });
     }
-
+    
     req.session.user = { id: user.id };
   } catch (error) {
     console.log('[!] Error en login: ', error);
