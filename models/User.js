@@ -3,7 +3,7 @@ import sequelize from "./config.js";
 import bcrypt from 'bcrypt';
 
 export class User extends Model {
-  // Metodo para verificar contrasena
+  // Metodo para verificar contraseña
   validatePassword(password){
     return bcrypt.compare(password, this.password)
   }
