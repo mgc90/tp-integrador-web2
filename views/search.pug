@@ -6,7 +6,7 @@ block metadata
   title= query ? `"${query}" - Buscar - Fotaza` : 'Buscar - Fotaza'
 
 block content
-  div(class="max-w-7xl mx-auto px-4 py-8")
+  div(class="max-w-7xl mx-auto px-2 py-8")
     if query
       h1(class="text-2xl text-white font-semibold mb-1")
         | Resultados para: 
@@ -24,11 +24,13 @@ block content
 
       div(class="flex items-center gap-2 mb-6 text-sm flex-wrap")
         span(class="text-zinc-400 font-medium") Filtrar por:
-        each btn in [{ key: 'title', label: 'Título' }, { key: 'author', label: 'Autor' }, { key: 'tag', label: 'Etiqueta' }]
+        each btn in [{ key: 'title', label: 'Título' }, { key: 'author', label: 'Autor' }, 
+        { key: 'tag', label: 'Etiqueta' }]
           - var isActive = activeFilters.includes(btn.key)
           a(href=toggleFilterUrl(btn.key),
             class="px-3 py-1.5 rounded-full border transition-colors cursor-pointer " +
-            (isActive ? "bg-red-600 border-red-600 text-white" : "border-zinc-600 text-zinc-300 hover:border-zinc-500"))
+            (isActive ? "bg-red-600 border-red-600 text-white" : 
+            "border-zinc-600 text-zinc-300 hover:border-zinc-500"))
             = btn.label
         span(class="text-zinc-400 font-medium ml-2") Orden:
         +filterByOrderBar({ sort, query, activeFilters, baseUrl: '/search' })
@@ -39,17 +41,28 @@ block content
       if totalPages > 1
         div(class="flex items-center justify-center gap-2 mt-8")
           if page > 1
-            - var prevParams = 'q=' + encodeURIComponent(query) + (activeFilters.length ? '&filter=' + activeFilters.map(encodeURIComponent).join('&filter=') : '') + (sort ? '&sort=' + encodeURIComponent(sort) : '') + '&page=' + (page - 1)
-            a(href='/search?' + prevParams, class="px-3 py-1.5 rounded-lg border border-zinc-600 text-zinc-300 hover:border-zinc-400 hover:text-white text-sm transition-colors") Anterior
+            - var prevParams = 'q=' + encodeURIComponent(query) + (activeFilters.length ? 
+            '&filter=' + activeFilters.map(encodeURIComponent).join('&filter=') : '') + 
+            (sort ? '&sort=' + encodeURIComponent(sort) : '') + '&page=' + (page - 1)
+            a(href='/search?' + prevParams, class="px-3 py-1.5 rounded-lg border
+            border-zinc-600 text-zinc-300 hover:border-zinc-400 hover:text-white 
+            text-sm transition-colors") Anterior
           - var p = 1
           while p <= totalPages
-            - var pageParams = 'q=' + encodeURIComponent(query) + (activeFilters.length ? '&filter=' + activeFilters.map(encodeURIComponent).join('&filter=') : '') + (sort ? '&sort=' + encodeURIComponent(sort) : '') + '&page=' + p
+            - var pageParams = 'q=' + encodeURIComponent(query) + (activeFilters.length ? 
+            '&filter=' + activeFilters.map(encodeURIComponent).join('&filter=') : '') + 
+            (sort ? '&sort=' + encodeURIComponent(sort) : '') + '&page=' + p
             a(href='/search?' + pageParams,
               class="px-3 py-1.5 rounded-lg border text-sm transition-colors " +
-              (p === page ? "bg-red-600 border-red-600 text-white" : "border-zinc-600 text-zinc-300 hover:border-zinc-400 hover:text-white"))= p
+              (p === page ? "bg-red-600 border-red-600 text-white" : "border-zinc-600 
+              text-zinc-300 hover:border-zinc-400 hover:text-white"))= p
             - p++
           if page < totalPages
-            - var nextParams = 'q=' + encodeURIComponent(query) + (activeFilters.length ? '&filter=' + activeFilters.map(encodeURIComponent).join('&filter=') : '') + (sort ? '&sort=' + encodeURIComponent(sort) : '') + '&page=' + (page + 1)
-            a(href='/search?' + nextParams, class="px-3 py-1.5 rounded-lg border border-zinc-600 text-zinc-300 hover:border-zinc-400 hover:text-white text-sm transition-colors") Siguiente
+            - var nextParams = 'q=' + encodeURIComponent(query) + (activeFilters.length ? 
+            '&filter=' + activeFilters.map(encodeURIComponent).join('&filter=') : '') + 
+            (sort ? '&sort=' + encodeURIComponent(sort) : '') + '&page=' + (page + 1)
+            a(href='/search?' + nextParams, class="px-3 py-1.5 rounded-lg border 
+            border-zinc-600 text-zinc-300 hover:border-zinc-400 hover:text-white 
+            text-sm transition-colors") Siguiente
     else if query
       p(class="text-zinc-500 text-center py-16 text-lg") No se encontraron publicaciones.

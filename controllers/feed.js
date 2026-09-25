@@ -6,7 +6,7 @@ import { Follow } from "../models/Follow.js";
 import sequelize from "../models/config.js";
 
 export async function feed(req, res) {
-  const sort = req.query.sort || 'most-voted';
+  const sort = req.query.sort || 'newest';
 
   try {
     let order;
